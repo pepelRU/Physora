@@ -397,7 +397,7 @@ struct FormulaView: View {
     var foregroundStyle: Color = .primary
     var centersWhenFits: Bool = false
 
-    @ScaledMetric(relativeTo: .body) private var scaledFontSize: CGFloat
+    @ScaledMetric(relativeTo: .body) private var scaledFontSize: CGFloat = 21
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(
