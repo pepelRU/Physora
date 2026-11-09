@@ -186,9 +186,14 @@ struct MathParser {
             skipSpaces()
             if index < characters.count, characters[index] == "[" {
                 index += 1
-                let nodes = parseSequence(stop: "]")
+                let indexStart = index
+                while index < characters.count, characters[index] != "]" {
+                    index += 1
+                }
+                let rawIndex = String(characters[indexStart..<index])
                 if index < characters.count, characters[index] == "]" { index += 1 }
-                rootIndex = nodes.count == 1 ? nodes[0] : .sequence(nodes)
+                let trimmed = rawIndex.trimmingCharacters(in: .whitespacesAndNewlines)
+                rootIndex = trimmed.isEmpty ? nil : .text(trimmed)
             }
             let radicand = parseGroup()
             return .root(index: rootIndex, radicand: radicand)
