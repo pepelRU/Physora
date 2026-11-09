@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -105,6 +105,57 @@ jobs:
           xcrun simctl launch "$UDID" com.pepelru.physora
           sleep 4
           xcrun simctl io "$UDID" screenshot artifacts/home-dark.png
+
+      - name: Build unsigned app for iPhone
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Physora.xcodeproj \
+            -scheme Physora \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build-device \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build | tee device-build.log
+
+      - name: Package unsigned IPA
+        shell: bash
+        run: |
+          APP_PATH="build-device/Build/Products/Release-iphoneos/Physora.app"
+          test -d "$APP_PATH"
+          rm -rf Payload Physora.ipa
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          ditto -c -k --sequesterRsrc --keepParent Payload Physora.ipa
+          ls -lh Physora.ipa
+          ditto -c -k --keepParent "$APP_PATH" artifacts/Physora-device.app.zip
+          cp Physora.ipa artifacts/Physora.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Physora-unsigned-ipa
+          path: Physora.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish latest IPA release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Physora latest build
+          body: |
+            Unsigned IPA built from ${{ github.sha }}.
+
+            This build is not signed with an Apple Development certificate. Use your own signing workflow / LiveContainer, or open the Xcode project and run on your device with a development team.
+          prerelease: true
+          overwrite_files: true
+          files: Physora.ipa
 
       - name: Package project and simulator app
         if: always()

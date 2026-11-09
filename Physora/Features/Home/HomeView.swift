@@ -27,12 +27,11 @@ struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         greeting
-                        if !appState.hasStoredAPIKey {
-                            connectBanner
-                        }
                         TaskComposerView(
                             text: $appState.composerDraft,
                             isFocused: $isComposerFocused,
+                            isAIConnected: appState.hasStoredAPIKey,
+                            onOpenSettings: { appState.showSettings() },
                             onSolve: startSolving
                         )
                         if let storageWarning {
