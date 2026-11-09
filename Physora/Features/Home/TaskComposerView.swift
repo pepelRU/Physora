@@ -41,7 +41,7 @@ struct TaskComposerView: View {
                     onOpenSettings()
                 } label: {
                     CapsuleTag(
-                        text: isAIConnected ? "DeepSeek" : "Подключить AI",
+                        text: isAIConnected ? "DeepSeek" : "Подключить",
                         systemImage: isAIConnected ? "brain.head.profile" : "key.fill",
                         tint: isAIConnected ? .physoraAccent : .physoraAmber
                     )

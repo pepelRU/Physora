@@ -8,12 +8,30 @@
   <img src="Physora/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="180" alt="Иконка Physora">
 </p>
 
-> **Статус:** активная разработка. Компиляция и unit-тесты проверяются через GitHub Actions на macOS-раннере с Xcode 26 и iOS 26 SDK. В Windows-окружении Xcode недоступен, поэтому локальная сборка здесь не выполнялась; статус CI — источник истины.
+## Скачать IPA
+
+**[Скачать Physora.ipa](https://github.com/pepelRU/Physora/releases/download/latest/Physora.ipa)** — unsigned-сборка для iOS 26+ (arm64, около 2,8 МБ), собранная GitHub Actions.
+
+Сборка не подписана Apple Development-сертификатом. Для установки используйте LiveContainer/аналогичное окружение либо откройте `Physora.xcodeproj` и запустите приложение со своей Development Team. Обычный iPhone без подписи IPA не установит.
+
+> **Статус:** CI-сборка и unit-тесты проходят на macOS-раннере (Xcode 26.6, iOS 26.5 SDK). В среде разработки на Windows Xcode отсутствует, поэтому проверка выполнялась через GitHub Actions; статус CI и релиз `latest` — источник истины.
+
+---
+
+## Интерфейс
+
+| Светлая тема | Тёмная тема |
+|---|---|
+| ![Главный экран, светлая тема](Docs/Screenshots/home-light.png) | ![Главный экран, тёмная тема](Docs/Screenshots/home-dark.png) |
+
+Скриншоты сделаны CI в iOS Simulator на стартовом состоянии без API-ключа.
 
 ---
 
 ## Содержание
 
+- [Скачать IPA](#скачать-ipa)
+- [Интерфейс](#интерфейс)
 - [Возможности](#возможности)
 - [Технологии](#технологии)
 - [Требования](#требования)
@@ -167,6 +185,14 @@ xcodebuild test \
 6. Нажмите **Run**. При первом запуске разрешите доверие разработчику в настройках iOS.
 
 Для установки без App Store нужен Apple ID/Development Team. Неподписанный IPA, собранный CI, не устанавливается напрямую на обычный iPhone; его можно использовать только в окружениях, которые принимают неподписанные сборки, либо подписать самостоятельно.
+
+### Готовая unsigned-сборка
+
+- IPA: [Physora.ipa](https://github.com/pepelRU/Physora/releases/download/latest/Physora.ipa)
+- Артефакт Actions: **Physora-unsigned-ipa** в последнем запуске **Build & Test**.
+- Требуется iOS 26.0+ и arm64-устройство.
+- Для LiveContainer: скачайте IPA на устройство и откройте его через LiveContainer (или подпишите своим сертификатом).
+- Для физического iPhone с Xcode: используйте инструкцию выше, это надёжнее неподписанного IPA.
 
 ---
 
@@ -388,6 +414,8 @@ GitHub Actions workflow `.github/workflows/build.yml`:
 - собирает **Physora** под iOS Simulator;
 - выбирает доступный iPhone-симулятор и запускает XCTest;
 - делает скриншоты главного экрана в светлой и тёмной теме;
+- собирает unsigned Release-приложение под arm64 iPhone и упаковывает `Physora.ipa`;
+- публикует IPA в релизе [`latest`](https://github.com/pepelRU/Physora/releases/tag/latest);
 - прикладывает simulator-сборку, скриншоты, логи и result bundle к запуску.
 
 Секреты для CI не требуются: DeepSeek API не вызывается в unit-тестах.

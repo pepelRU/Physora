@@ -151,12 +151,15 @@ struct CapsuleTag: View {
             Text(text)
                 .font(.caption.weight(.semibold))
                 .fontDesign(.rounded)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .foregroundStyle(tint)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(tint.opacity(0.11), in: Capsule())
         .overlay(Capsule().strokeBorder(tint.opacity(0.13), lineWidth: 1))
+        .fixedSize(horizontal: true, vertical: false)
         .accessibilityElement(children: .combine)
     }
 }
