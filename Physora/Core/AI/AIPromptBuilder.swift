@@ -142,7 +142,7 @@ enum AIPromptBuilder {
         END_PROBLEM
 
         Настройки этого запроса:
-        - подробность: \(preferences.explanationDetail.russianDetail)
+        - подробность: \(preferences.russianDetail)
         - обязательный перевод в СИ: \(preferences.autoSI ? "да" : "нет")
         - строить чертежи: \(preferences.buildDiagrams ? "да, только при необходимости" : "нет")
         - дополнительные пояснения: \(preferences.showExtraExplanations ? "да" : "нет")
