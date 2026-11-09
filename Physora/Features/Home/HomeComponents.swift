@@ -78,7 +78,7 @@ struct RecentSolutionCard: View {
                         if problem.isFavorite {
                             Image(systemName: "star.fill")
                                 .font(.caption2)
-                                .foregroundStyle(.physoraAmber)
+                                .foregroundStyle(Color.physoraAmber)
                         }
                     }
                     .font(.caption2)

@@ -51,7 +51,7 @@ struct MathParser {
 
             if character.isWhitespace {
                 index += 1
-                if !nodes.isEmpty, case .space = nodes.last { continue }
+                if let lastNode = nodes.last, case .space = lastNode { continue }
                 nodes.append(.space(0.30))
                 continue
             }

@@ -136,7 +136,7 @@ struct TaskComposerView: View {
             }
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
-                    ForEach(examples, id: \.title) { example in
+                    ForEach(Array(examples.enumerated()), id: \.offset) { _, example in
                         Button {
                             text = example.prompt
                             isFocused = true

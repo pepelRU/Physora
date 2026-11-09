@@ -134,7 +134,7 @@ struct TechnologiesView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 4)
-                ForEach(items, id: \.title) { item in
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: item.icon)
                             .font(.subheadline.weight(.semibold))

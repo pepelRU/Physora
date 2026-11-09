@@ -78,7 +78,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO | tee test.log
 
-      - name: Package generated Xcode project
+      - name: Package project and simulator app
         if: always()
         shell: bash
         run: |

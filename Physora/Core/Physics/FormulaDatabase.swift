@@ -68,8 +68,7 @@ enum FormulaDatabase {
         }
     }
 
-    static let formulas: [PhysicsFormula] = mechanics + molecular + thermodynamics
-        + electrodynamics + optics + oscillations + quantum
+    static let formulas: [PhysicsFormula] = mechanics + molecular + thermodynamics + electrodynamics + optics + oscillations + quantum
 
     private static let mechanics: [PhysicsFormula] = [
         PhysicsFormula(

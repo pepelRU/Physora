@@ -8,7 +8,7 @@
   <img src="Physora/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="180" alt="Иконка Physora">
 </p>
 
-> **Статус:** активная разработка. Сборка и тесты проверяются через GitHub Actions на macOS-раннере с iOS 26 SDK. В Windows-окружении Xcode недоступен, поэтому локальная сборка здесь не выполнялась; статус CI — источник истины.
+> **Статус:** активная разработка. Компиляция и unit-тесты проверяются через GitHub Actions на macOS-раннере с Xcode 26 и iOS 26 SDK. В Windows-окружении Xcode недоступен, поэтому локальная сборка здесь не выполнялась; статус CI — источник истины.
 
 ---
 
@@ -95,7 +95,8 @@
 
 - **macOS** с **Xcode 26** и **iOS 26 SDK**.
 - **iOS 26.0+** на устройстве или симуляторе.
-- **XcodeGen** для генерации `.xcodeproj` из `project.yml` (если готовый проект отсутствует).
+- Готовый **`Physora.xcodeproj`** уже находится в репозитории.
+- **XcodeGen** — опционально, для перегенерации проекта из `project.yml`.
 - API-ключ DeepSeek и положительный баланс на платформе DeepSeek.
 - Интернет — только для AI-решений и проверки подключения.
 
@@ -121,7 +122,7 @@ xcodegen generate
 open Physora.xcodeproj
 ```
 
-`project.yml` — единственный источник структуры проекта. Сгенерированный `.xcodeproj` коммитится в репозиторий, а CI дополнительно собирает его на macOS и прикладывает архивом к запуску workflow.
+`project.yml` — декларативная спецификация структуры проекта. Готовый `.xcodeproj` коммитится в репозиторий, поэтому проект можно открыть без XcodeGen. Для воспроизведения спецификации используется XcodeGen, а кроссплатформенный fallback-генератор находится в `Tools/generate_xcodeproj.py`.
 
 ### Сборка из терминала
 
@@ -373,11 +374,11 @@ DeepSeek вызывается в JSON-режиме и обязан вернут�
 - валидация решений, предупреждения и отбрасывание неподдерживаемых чертежей.
 
 GitHub Actions workflow `.github/workflows/build.yml`:
-- выбирает latest-stable Xcode;
-- генерирует проект через XcodeGen;
-- собирает схему **Physora** под iOS Simulator;
+- использует latest-stable Xcode;
+- проверяет схему закоммиченного Xcode-проекта;
+- собирает **Physora** под iOS Simulator;
 - выбирает доступный iPhone-симулятор и запускает XCTest;
-- прикладывает `Physora.xcodeproj.zip` и логи/result bundle к запуску.
+- прикладывает simulator-сборку, логи и result bundle к запуску.
 
 Секреты для CI не требуются: DeepSeek API не вызывается в unit-тестах.
 
@@ -387,6 +388,7 @@ GitHub Actions workflow `.github/workflows/build.yml`:
 2. Убедитесь, что workflow включён на вкладке **Actions**.
 3. При необходимости измените `runs-on` и версию Xcode в `.github/workflows/build.yml` под доступный macOS runner.
 4. Запустите **Build & Test** вручную или сделайте push в `main`.
+5. Готовый simulator-артефакт и логи можно скачать на странице запуска.
 
 ---
 
