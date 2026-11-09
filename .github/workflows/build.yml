@@ -1,0 +1,113 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Xcode build and unit tests
+    runs-on: macos-15
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          xcodebuild -showsdks
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate
+          ls -la
+          find Physora.xcodeproj -maxdepth 2 -type f | sort
+
+      - name: Build for iOS Simulator
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Physora.xcodeproj \
+            -scheme Physora \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee build.log
+
+      - name: Select available iPhone simulator
+        id: simulator
+        shell: bash
+        run: |
+          UDID=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ {print $2; exit}')
+          if [ -z "$UDID" ]; then
+            echo "No available iPhone simulator found" >&2
+            exit 1
+          fi
+          echo "iPhone simulator: $UDID"
+          echo "id=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Physora.xcodeproj \
+            -scheme Physora \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.id }}" \
+            -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO | tee test.log
+
+      - name: Package generated Xcode project
+        if: always()
+        shell: bash
+        run: |
+          if [ -d Physora.xcodeproj ]; then
+            ditto -c -k --sequesterRsrc --keepParent Physora.xcodeproj Physora.xcodeproj.zip
+          fi
+
+      - name: Upload generated Xcode project
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Physora-generated-xcodeproj
+          path: Physora.xcodeproj.zip
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Physora-build-logs
+          path: |
+            build.log
+            test.log
+            TestResults.xcresult
+          if-no-files-found: ignore
+          retention-days: 14
