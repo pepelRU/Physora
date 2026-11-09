@@ -75,8 +75,36 @@ jobs:
             -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.id }}" \
             -derivedDataPath build \
             -resultBundlePath TestResults.xcresult \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO | tee test.log
+
+      - name: Capture simulator screenshots
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          UDID: ${{ steps.simulator.outputs.id }}
+        run: |
+          APP="build/Build/Products/Debug-iphonesimulator/Physora.app"
+          if [ ! -d "$APP" ] || [ -z "$UDID" ]; then
+            echo "App or simulator is unavailable"
+            exit 0
+          fi
+          mkdir -p artifacts
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl ui "$UDID" appearance light
+          xcrun simctl terminate "$UDID" com.pepelru.physora 2>/dev/null || true
+          xcrun simctl launch "$UDID" com.pepelru.physora
+          sleep 5
+          xcrun simctl io "$UDID" screenshot artifacts/home-light.png
+          xcrun simctl ui "$UDID" appearance dark
+          xcrun simctl terminate "$UDID" com.pepelru.physora 2>/dev/null || true
+          xcrun simctl launch "$UDID" com.pepelru.physora
+          sleep 4
+          xcrun simctl io "$UDID" screenshot artifacts/home-dark.png
 
       - name: Package project and simulator app
         if: always()

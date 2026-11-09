@@ -121,7 +121,8 @@ enum PhysicsEngine {
                 .prefix(100)
                 .filter { $0.isSupported }
                 .map { sanitize(element: $0, designWidth: diagram.designSize.width, designHeight: diagram.designSize.height) }
-            guard !elements.isEmpty else { return nil }
+            let hasGeometricContent = elements.contains { $0.type != "label" }
+            guard elements.count >= 2, hasGeometricContent else { return nil }
             return DiagramSpec(
                 title: clean(diagram.title, limit: 160),
                 kind: clean(diagram.kind, limit: 40),

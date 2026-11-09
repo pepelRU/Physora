@@ -150,12 +150,15 @@ def draw_atom(size: int = 4096) -> Image.Image:
     return image
 
 
-def save_png(image: Image.Image, path: Path, size: int | None = None) -> None:
+def save_png(image: Image.Image, path: Path, size: int | None = None, opaque: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     out = image
     if size is not None and out.size != (size, size):
         out = out.resize((size, size), Image.Resampling.LANCZOS)
-    out.convert("RGBA").save(path, "PNG", optimize=True)
+    if opaque:
+        out.convert("RGB").save(path, "PNG", optimize=True)
+    else:
+        out.convert("RGBA").save(path, "PNG", optimize=True)
 
 
 def make_launch_logo(icon: Image.Image, background: str) -> Image.Image:
@@ -206,13 +209,13 @@ def main() -> None:
     LAUNCH.mkdir(parents=True, exist_ok=True)
 
     icon = draw_atom(4096)
-    save_png(icon, APPICON / "AppIcon.png", 1024)
-    save_png(icon, APPICON / "AppIcon-Dark.png", 1024)
+    save_png(icon, APPICON / "AppIcon.png", 1024, opaque=True)
+    save_png(icon, APPICON / "AppIcon-Dark.png", 1024, opaque=True)
 
     # Tinted artwork: a high-contrast monochrome mask on deep neutral ink.
     tinted = ImageOps.grayscale(icon)
     tinted = ImageOps.colorize(tinted, black=(17, 22, 32), white=(248, 251, 255)).convert("RGBA")
-    save_png(tinted, APPICON / "AppIcon-Tinted.png", 1024)
+    save_png(tinted, APPICON / "AppIcon-Tinted.png", 1024, opaque=True)
 
     light = make_launch_logo(icon, "light")
     dark = make_launch_logo(icon, "dark")

@@ -54,6 +54,51 @@ final class PhysicsEngineTests: XCTestCase {
     }
 
     func testDiagramIsRemovedWhenThePreferenceIsOff() throws {
+        let decoded = try diagramSolution()
+        var preferences = SolutionPreferences.standard
+        preferences.buildDiagrams = false
+        let prepared = try PhysicsEngine.prepare(decoded, preferences: preferences)
+        XCTAssertTrue(prepared.diagrams.isEmpty)
+        XCTAssertFalse(prepared.needsDiagram)
+    }
+
+    func testTextOnlyDiagramIsRejected() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "topic": "Механика",
+          "isPhysicsProblem": true,
+          "problemAnalysis": "Разберём силы.",
+          "given": [],
+          "find": [{"symbol":"F","description":"сила","unit":"Н"}],
+          "siNote": "",
+          "siConversions": [],
+          "formulas": [],
+          "solutionSteps": [{"title":"Шаг","explanation":"","formula":"F = ma","calculation":"","result":""}],
+          "calculations": [],
+          "diagrams": [{
+            "title": "Текстовое описание",
+            "kind": "forces",
+            "width": 360,
+            "height": 240,
+            "elements": [
+              {"type":"label","x":20,"y":20,"text":"На тело действует сила"},
+              {"type":"label","x":40,"y":50,"text":"Направление вправо"}
+            ]
+          }],
+          "graphs": [],
+          "finalAnswer": [{"symbol":"F","value":"6","unit":"Н"}],
+          "explanation": "",
+          "warnings": [],
+          "needsDiagram": true
+        }
+        """
+        let decoded = try JSONDecoder().decode(PhysicsSolution.self, from: Data(json.utf8))
+        let prepared = try PhysicsEngine.prepare(decoded, preferences: .standard)
+        XCTAssertTrue(prepared.diagrams.isEmpty)
+    }
+
+    private func diagramSolution() throws -> PhysicsSolution {
         let json = """
         {
           "schemaVersion": 1,
@@ -83,11 +128,6 @@ final class PhysicsEngineTests: XCTestCase {
           "needsDiagram": true
         }
         """
-        let decoded = try JSONDecoder().decode(PhysicsSolution.self, from: Data(json.utf8))
-        var preferences = SolutionPreferences.standard
-        preferences.buildDiagrams = false
-        let prepared = try PhysicsEngine.prepare(decoded, preferences: preferences)
-        XCTAssertTrue(prepared.diagrams.isEmpty)
-        XCTAssertFalse(prepared.needsDiagram)
+        return try JSONDecoder().decode(PhysicsSolution.self, from: Data(json.utf8))
     }
 }

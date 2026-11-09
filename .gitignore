@@ -29,6 +29,14 @@ Packages/
 *.pdf
 *.png.tmp
 /Exports/
+artifacts/
+*.xcresult
+TestResults.xcresult
+
+# Python tooling
+__pycache__/
+*.py[cod]
+.venv/
 
 # Secrets and local configuration
 .env
