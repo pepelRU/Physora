@@ -12,7 +12,12 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         appearanceSection
                         aiSection
-                        solutionsSection
+                        solutionsSection(
+                            explanationDetail: $appState.explanationDetail,
+                            autoSI: $appState.autoSI,
+                            buildDiagrams: $appState.buildDiagrams,
+                            extraExplanations: $appState.showExtraExplanations
+                        )
                         applicationSection
                     }
                     .padding(.horizontal, 18)
@@ -129,21 +134,25 @@ struct SettingsView: View {
         }
     }
 
-    private var solutionsSection: some View {
-        @Bindable var appState = appState
-        return VStack(alignment: .leading, spacing: 12) {
+    private func solutionsSection(
+        explanationDetail: Binding<ExplanationDetail>,
+        autoSI: Binding<Bool>,
+        buildDiagrams: Binding<Bool>,
+        extraExplanations: Binding<Bool>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             PhysoraSectionHeader("Решения", systemImage: "doc.text.magnifyingglass")
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 9) {
                     Text("Подробность объяснений")
                         .font(.subheadline.weight(.medium))
-                    Picker("Подробность", selection: $appState.explanationDetail) {
+                    Picker("Подробность", selection: explanationDetail) {
                         ForEach(ExplanationDetail.allCases) { detail in
                             Text(detail.title).tag(detail)
                         }
                     }
                     .pickerStyle(.segmented)
-                    Text(appState.explanationDetail.subtitle)
+                    Text(explanationDetail.wrappedValue.subtitle)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -155,21 +164,21 @@ struct SettingsView: View {
                     title: "Перевод в СИ",
                     subtitle: "Просить модель переводить величины в систему СИ",
                     systemImage: "ruler",
-                    isOn: $appState.autoSI
+                    isOn: autoSI
                 )
                 SettingsDivider()
                 SettingsToggleRow(
                     title: "Автоматические чертежи",
                     subtitle: "Строить схемы из графических примитивов, если они нужны",
                     systemImage: "scribble.variable",
-                    isOn: $appState.buildDiagrams
+                    isOn: buildDiagrams
                 )
                 SettingsDivider()
                 SettingsToggleRow(
                     title: "Дополнительные пояснения",
                     subtitle: "Показывать физический смысл и проверку результата",
                     systemImage: "text.quote",
-                    isOn: $appState.showExtraExplanations
+                    isOn: extraExplanations
                 )
             }
             .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))

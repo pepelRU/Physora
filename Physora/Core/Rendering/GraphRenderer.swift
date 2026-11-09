@@ -35,7 +35,7 @@ struct PhysicsGraphView: View {
                             y: .value("Y", point.y),
                             series: .value("Серия", seriesIDs[index])
                         )
-                        .foregroundStyle(by: .value("Серия", seriesIDs[index]))
+                        .foregroundStyle(seriesColors[index])
                         .lineStyle(StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
                         .interpolationMethod(.linear)
 
@@ -50,7 +50,6 @@ struct PhysicsGraphView: View {
                     }
                 }
             }
-            .chartForegroundStyleScale(domain: seriesIDs, range: seriesColors)
             .chartLegend(.hidden)
             .chartXAxis {
                 AxisMarks(position: .bottom) { _ in

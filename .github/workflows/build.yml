@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     name: Xcode build and unit tests
-    runs-on: macos-26
+    runs-on: macos-latest
     timeout-minutes: 50
 
     steps:
@@ -34,14 +34,9 @@ jobs:
           swift --version
           xcodebuild -showsdks
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode project
+      - name: Inspect committed Xcode project
         run: |
-          xcodegen generate
-          ls -la
-          find Physora.xcodeproj -maxdepth 2 -type f | sort
+          xcodebuild -list -project Physora.xcodeproj
 
       - name: Build for iOS Simulator
         shell: bash
@@ -87,16 +82,20 @@ jobs:
         if: always()
         shell: bash
         run: |
+          mkdir -p artifacts
           if [ -d Physora.xcodeproj ]; then
-            ditto -c -k --sequesterRsrc --keepParent Physora.xcodeproj Physora.xcodeproj.zip
+            ditto -c -k --sequesterRsrc --keepParent Physora.xcodeproj artifacts/Physora.xcodeproj.zip
+          fi
+          if [ -d build/Build/Products/Debug-iphonesimulator/Physora.app ]; then
+            ditto -c -k --sequesterRsrc --keepParent build/Build/Products/Debug-iphonesimulator/Physora.app artifacts/Physora-simulator.app.zip
           fi
 
-      - name: Upload generated Xcode project
+      - name: Upload project and simulator build
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Physora-generated-xcodeproj
-          path: Physora.xcodeproj.zip
+          name: Physora-simulator-build
+          path: artifacts/
           if-no-files-found: warn
           retention-days: 30
 
