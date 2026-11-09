@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 // MARK: - Palette shared by diagrams and charts
@@ -64,7 +65,7 @@ struct DiagramView: View {
         )
 
         func point(_ x: Double, _ y: Double) -> CGPoint {
-            CGPoint(x: origin.x + x * scale, y: origin.y + y * scale)
+            CGPoint(x: origin.x + CGFloat(x) * scale, y: origin.y + CGFloat(y) * scale)
         }
 
         if diagram.showGrid {
@@ -174,11 +175,13 @@ struct DiagramView: View {
         case "circle":
             guard let cx = element.cx, let cy = element.cy else { return }
             let radius = max(2, element.r ?? 12)
+            let diameter = CGFloat(radius * 2) * scale
+            let corner = point(cx - radius, cy - radius)
             let rect = CGRect(
-                x: point(cx - radius, cy - radius).x,
-                y: point(cx - radius, cy - radius).y,
-                width: radius * 2 * scale,
-                height: radius * 2 * scale
+                x: corner.x,
+                y: corner.y,
+                width: diameter,
+                height: diameter
             )
             if element.filled == true {
                 context.fill(Path(ellipseIn: rect), with: .color(color.opacity(0.12)))
@@ -189,21 +192,23 @@ struct DiagramView: View {
             let cy = element.cy ?? element.y ?? 0
             let radius = max(1.5, element.r ?? 3.2)
             let p = point(cx, cy)
+            let screenRadius = CGFloat(radius) * scale
             let rect = CGRect(
-                x: p.x - radius * scale,
-                y: p.y - radius * scale,
-                width: radius * 2 * scale,
-                height: radius * 2 * scale
+                x: p.x - screenRadius,
+                y: p.y - screenRadius,
+                width: screenRadius * 2,
+                height: screenRadius * 2
             )
             context.fill(Path(ellipseIn: rect), with: .color(color))
         case "rectangle", "roundedRectangle":
             guard let x = element.x, let y = element.y,
                   let width = element.width, let height = element.height else { return }
+            let corner = point(x, y)
             let rect = CGRect(
-                x: point(x, y).x,
-                y: point(x, y).y,
-                width: width * scale,
-                height: height * scale
+                x: corner.x,
+                y: corner.y,
+                width: CGFloat(width) * scale,
+                height: CGFloat(height) * scale
             )
             let shape = element.type == "roundedRectangle"
                 ? RoundedRectangle(cornerRadius: 8 * scale, style: .continuous).path(in: rect)
@@ -239,7 +244,7 @@ struct DiagramView: View {
             var path = Path()
             path.addArc(
                 center: point(cx, cy),
-                radius: radius * scale,
+                radius: CGFloat(radius) * scale,
                 startAngle: start,
                 endAngle: end,
                 clockwise: false
@@ -253,7 +258,7 @@ struct DiagramView: View {
             var path = Path()
             path.addArc(
                 center: point(cx, cy),
-                radius: radius * scale,
+                radius: CGFloat(radius) * scale,
                 startAngle: start,
                 endAngle: end,
                 clockwise: false
@@ -344,16 +349,16 @@ struct DiagramView: View {
             style: StrokeStyle(lineWidth: width, lineCap: .round)
         )
 
-        let angle = atan2(end.y - start.y, end.x - start.x)
-        let headLength = max(width * 4.2, 8)
-        let headAngle: CGFloat = .pi / 7
+        let angle = atan2(Double(end.y - start.y), Double(end.x - start.x))
+        let headLength = Double(max(width * 4.2, 8))
+        let headAngle = Double.pi / 7
         let p1 = CGPoint(
-            x: end.x - headLength * cos(angle - headAngle),
-            y: end.y - headLength * sin(angle - headAngle)
+            x: end.x - CGFloat(headLength * cos(angle - headAngle)),
+            y: end.y - CGFloat(headLength * sin(angle - headAngle))
         )
         let p2 = CGPoint(
-            x: end.x - headLength * cos(angle + headAngle),
-            y: end.y - headLength * sin(angle + headAngle)
+            x: end.x - CGFloat(headLength * cos(angle + headAngle)),
+            y: end.y - CGFloat(headLength * sin(angle + headAngle))
         )
         var head = Path()
         head.move(to: end)
@@ -376,7 +381,7 @@ struct DiagramView: View {
         let resolved = context.resolve(
             Text(text)
                 .font(.system(size: fontSize, weight: .medium, design: .rounded))
-                .foregroundStyle(color)
+                .foregroundColor(color)
         )
         let measured = resolved.measure(in: CGSize(width: 260, height: 60))
         let center = point(designPoint.x, designPoint.y)
@@ -611,11 +616,12 @@ struct DiagramView: View {
         context.stroke(leads, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
 
         let center = point(cx, cy)
+        let screenRadius = CGFloat(radius) * scale
         let rect = CGRect(
-            x: center.x - radius * scale,
-            y: center.y - radius * scale,
-            width: radius * 2 * scale,
-            height: radius * 2 * scale
+            x: center.x - screenRadius,
+            y: center.y - screenRadius,
+            width: screenRadius * 2,
+            height: screenRadius * 2
         )
         context.stroke(Path(ellipseIn: rect), with: .color(color), style: StrokeStyle(lineWidth: width))
         drawCenteredSymbol(symbol, at: center, size: 12 * scale, color: color, context: &context)
@@ -709,9 +715,9 @@ struct DiagramView: View {
 
         for (index, halfWidth) in [14.0, 9.0, 4.0].enumerated() {
             var line = Path()
-            let y = start.y + (11 + Double(index) * 5) * scale
-            line.move(to: CGPoint(x: start.x - halfWidth * scale, y: y))
-            line.addLine(to: CGPoint(x: start.x + halfWidth * scale, y: y))
+            let y = start.y + CGFloat(11 + Double(index) * 5) * scale
+            line.move(to: CGPoint(x: start.x - CGFloat(halfWidth) * scale, y: y))
+            line.addLine(to: CGPoint(x: start.x + CGFloat(halfWidth) * scale, y: y))
             context.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
         }
     }
@@ -726,7 +732,7 @@ struct DiagramView: View {
         context.draw(
             Text(symbol)
                 .font(.system(size: max(8, size), weight: .semibold, design: .rounded))
-                .foregroundStyle(color),
+                .foregroundColor(color),
             at: point,
             anchor: .center
         )

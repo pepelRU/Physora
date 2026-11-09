@@ -81,9 +81,10 @@ struct MathParser {
                 continue
             }
 
+            let indexBeforeAtom = index
             if let node = parseAtomWithScripts() {
                 nodes.append(node)
-            } else {
+            } else if index == indexBeforeAtom {
                 index += 1
             }
         }
@@ -426,7 +427,6 @@ struct FormulaView: View {
                 )
                 .padding(.vertical, 3)
                 .padding(.horizontal, 1)
-                .frame(minWidth: centersWhenFits ? 0 : nil)
             }
             .scrollIndicators(.hidden)
             .accessibilityElement(children: .ignore)
@@ -470,7 +470,7 @@ private struct MathNodeView: View {
                 .fixedSize()
         case .space(let multiplier):
             Color.clear
-                .frame(width: size * multiplier, height: 1)
+                .frame(width: size * CGFloat(multiplier), height: 1)
         case .sequence(let nodes):
             HStack(alignment: .center, spacing: 0) {
                 ForEach(Array(nodes.enumerated()), id: \.offset) { _, child in

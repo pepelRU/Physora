@@ -422,8 +422,15 @@ struct AISettingsView: View {
     }
 
     private func testConnection() {
-        guard let key = try? KeychainManager.readAPIKey(), let key else {
-            status = .failure("Сначала сохраните API-ключ DeepSeek.")
+        let key: String
+        do {
+            guard let saved = try KeychainManager.readAPIKey() else {
+                status = .failure("Сначала сохраните API-ключ DeepSeek.")
+                return
+            }
+            key = saved
+        } catch {
+            status = .failure(error.localizedDescription)
             return
         }
         inlineError = nil

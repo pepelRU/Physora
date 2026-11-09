@@ -2,6 +2,7 @@ import SwiftData
 import SwiftUI
 
 @main
+@MainActor
 struct PhysoraApp: App {
     private let container: ModelContainer
     @State private var appState: AppState

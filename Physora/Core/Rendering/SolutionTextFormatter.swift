@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 enum SolutionTextFormatter {
     static func formula(_ expression: String) -> String {

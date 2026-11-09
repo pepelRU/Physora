@@ -41,7 +41,8 @@ final class PhysicsEngineTests: XCTestCase {
         solution.isPhysicsProblem = false
         solution.explanation = "Это задача по литературе."
         XCTAssertThrowsError(try PhysicsEngine.prepare(solution, preferences: .standard)) { error in
-            guard case AIError.notPhysics = error else {
+            guard let aiError = error as? AIError,
+                  case .notPhysics = aiError else {
                 return XCTFail("Expected notPhysics")
             }
         }

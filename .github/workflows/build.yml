@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build:
     name: Xcode build and unit tests
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 50
 
     steps:

@@ -113,7 +113,7 @@ struct CalculatorView: View {
                     .lineLimit(1...3)
                     .minimumScaleFactor(0.5)
                     .submitLabel(.done)
-                    .onSubmit(evaluate)
+                    .onSubmit { evaluate() }
                     .accessibilityLabel("Выражение")
                 if !expression.isEmpty {
                     Button {

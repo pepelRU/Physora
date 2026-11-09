@@ -301,8 +301,6 @@ private final class SolutionPDFWriter {
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         drawSectionHeader("Условие")
         newPageIfNeeded(50)
-        let rect = CGRect(x: margin, y: y, width: contentWidth, height: 0)
-        let _ = rect
         let accentBar = CGRect(x: margin, y: y, width: 2.5, height: 22)
         accent.setFill()
         UIBezierPath(roundedRect: accentBar, cornerRadius: 1.25).fill()

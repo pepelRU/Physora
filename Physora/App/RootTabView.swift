@@ -7,19 +7,19 @@ struct RootTabView: View {
     var body: some View {
         @Bindable var appState = appState
         TabView(selection: $appState.selectedTab) {
-            Tab(AppTab.home.title, systemImage: AppTab.home.icon, value: AppTab.home) {
+            Tab("Главная", systemImage: "house.fill", value: AppTab.home) {
                 HomeView()
             }
-            Tab(AppTab.history.title, systemImage: AppTab.history.icon, value: AppTab.history) {
+            Tab("История", systemImage: "clock.arrow.circlepath", value: AppTab.history) {
                 HistoryView()
             }
-            Tab(AppTab.reference.title, systemImage: AppTab.reference.icon, value: AppTab.reference) {
+            Tab("Справочник", systemImage: "book.closed.fill", value: AppTab.reference) {
                 ReferenceView()
             }
-            Tab(AppTab.tools.title, systemImage: AppTab.tools.icon, value: AppTab.tools) {
+            Tab("Инструменты", systemImage: "function", value: AppTab.tools) {
                 ToolsView()
             }
-            Tab(AppTab.settings.title, systemImage: AppTab.settings.icon, value: AppTab.settings) {
+            Tab("Настройки", systemImage: "gearshape.fill", value: AppTab.settings) {
                 SettingsView()
             }
         }

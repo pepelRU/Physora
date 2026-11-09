@@ -260,9 +260,9 @@ private struct ExpressionParser {
     private func startsPrimary(_ token: MathToken) -> Bool {
         switch token {
         case .number, .identifier:
-            true
+            return true
         case .symbol(let symbol):
-            symbol == "("
+            return symbol == "("
         }
     }
 

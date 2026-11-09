@@ -116,7 +116,7 @@ struct SolvingProgressView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(item.title)
                             .font(.subheadline.weight(item == phase ? .semibold : .regular))
-                            .foregroundStyle(item.rawValue <= phase.rawValue ? .primary : .tertiary)
+                            .foregroundStyle(item.rawValue <= phase.rawValue ? Color.primary : Color.secondary.opacity(0.55))
                         if item == phase {
                             Text(item.detail)
                                 .font(.caption)
@@ -168,7 +168,7 @@ private struct SolvingAtomMark: View {
             for (index, degrees) in [-31.0, 31.0, 89.0].enumerated() {
                 let rotation = (degrees * .pi / 180) + angle * (index == 2 ? -0.35 : 0.35)
                 let transform = CGAffineTransform(translationX: center.x, y: center.y)
-                    .rotated(by: rotation)
+                    .rotated(by: CGFloat(rotation))
                     .translatedBy(x: -center.x, y: -center.y)
                 let rect = CGRect(
                     x: center.x - rx,
@@ -183,12 +183,14 @@ private struct SolvingAtomMark: View {
                     style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
                 )
                 let local = CGPoint(
-                    x: center.x + rx * cos(angle + Double(index) * 2.1),
-                    y: center.y + ry * sin(angle + Double(index) * 2.1)
+                    x: center.x + rx * CGFloat(cos(angle + Double(index) * 2.1)),
+                    y: center.y + ry * CGFloat(sin(angle + Double(index) * 2.1))
                 )
+                let cosine = CGFloat(cos(rotation))
+                let sine = CGFloat(sin(rotation))
                 let electron = CGPoint(
-                    x: center.x + (local.x - center.x) * cos(rotation) - (local.y - center.y) * sin(rotation),
-                    y: center.y + (local.x - center.x) * sin(rotation) + (local.y - center.y) * cos(rotation)
+                    x: center.x + (local.x - center.x) * cosine - (local.y - center.y) * sine,
+                    y: center.y + (local.x - center.x) * sine + (local.y - center.y) * cosine
                 )
                 let electronRect = CGRect(x: electron.x - 4, y: electron.y - 4, width: 8, height: 8)
                 context.fill(Path(ellipseIn: electronRect), with: .color(Color.physoraAccent))

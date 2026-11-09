@@ -42,12 +42,13 @@ actor DeepSeekService: AIService {
             try Task.checkCancellation()
             let content = try await requestCompletion(messages: messages)
             do {
-                var solution = try decodeSolution(from: content, modelID: modelID)
+                var solution = try decodeSolution(from: content)
                 solution = try PhysicsEngine.prepare(solution, preferences: preferences)
                 return solution
             } catch let error as AIError {
                 if case .notPhysics = error { throw error }
-                if case .malformedJSON = error, attempt == 0 {
+                if attempt == 0,
+                   (isRetryableParseFailure(error)) {
                     lastParseError = error
                     messages.append(ChatMessage(role: "assistant", content: String(content.prefix(24_000))))
                     messages.append(ChatMessage(role: "user", content: AIPromptBuilder.repairPrompt()))
@@ -215,6 +216,15 @@ actor DeepSeekService: AIService {
         status == 429 || (500...599).contains(status)
     }
 
+    private func isRetryableParseFailure(_ error: AIError) -> Bool {
+        switch error {
+        case .malformedJSON, .emptyResponse, .invalidResponse:
+            return true
+        default:
+            return false
+        }
+    }
+
     private static func retryDelay(attempt: Int, response: HTTPURLResponse) -> Double {
         if let value = response.value(forHTTPHeaderField: "Retry-After"), let seconds = Double(value) {
             return min(max(seconds, 1), 8)
@@ -236,7 +246,7 @@ actor DeepSeekService: AIService {
 
     // MARK: - Response decoding
 
-    private func decodeSolution(from content: String, modelID: String) throws -> PhysicsSolution {
+    private func decodeSolution(from content: String) throws -> PhysicsSolution {
         var text = content.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.hasPrefix("```") {
             if let newline = text.firstIndex(of: "\n") {

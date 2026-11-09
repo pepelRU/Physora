@@ -78,16 +78,17 @@ struct SolutionBlock<Content: View>: View {
 struct GivenFindBlock: View {
     let solution: PhysicsSolution
 
+    @ViewBuilder
     var body: some View {
-        ViewThatFits(in: .horizontal) {
+        if !solution.given.isEmpty, !solution.find.isEmpty {
             HStack(alignment: .top, spacing: 10) {
                 givenCard
                 findCard
             }
-            VStack(spacing: 10) {
-                givenCard
-                findCard
-            }
+        } else if !solution.given.isEmpty {
+            givenCard
+        } else if !solution.find.isEmpty {
+            findCard
         }
     }
 

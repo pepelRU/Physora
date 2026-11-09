@@ -265,9 +265,9 @@ struct AtomMark: View {
                     width: rx * 2,
                     height: ry * 2
                 )
-                let angle = degrees * .pi / 180
+                let rotation = degrees * .pi / 180
                 let transform = CGAffineTransform(translationX: center.x, y: center.y)
-                    .rotated(by: angle)
+                    .rotated(by: CGFloat(rotation))
                     .translatedBy(x: -center.x, y: -center.y)
                 let path = Path(ellipseIn: ellipseRect).applying(transform)
                 context.stroke(
@@ -277,10 +277,15 @@ struct AtomMark: View {
                 )
 
                 let t = index == 0 ? 0.28 : (index == 1 ? 2.90 : 1.42)
-                let local = CGPoint(x: center.x + rx * cos(t), y: center.y + ry * sin(t))
+                let local = CGPoint(
+                    x: center.x + rx * CGFloat(cos(t)),
+                    y: center.y + ry * CGFloat(sin(t))
+                )
+                let cosine = CGFloat(cos(rotation))
+                let sine = CGFloat(sin(rotation))
                 let electron = CGPoint(
-                    x: center.x + (local.x - center.x) * cos(angle) - (local.y - center.y) * sin(angle),
-                    y: center.y + (local.x - center.x) * sin(angle) + (local.y - center.y) * cos(angle)
+                    x: center.x + (local.x - center.x) * cosine - (local.y - center.y) * sine,
+                    y: center.y + (local.x - center.x) * sine + (local.y - center.y) * cosine
                 )
                 let radius = max(1.6, canvasSize.width * 0.036)
                 let rect = CGRect(

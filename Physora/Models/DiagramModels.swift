@@ -152,7 +152,7 @@ struct PhysicsGraph: Codable, Hashable, Sendable {
         yLabel = c.value(String.self, forKey: .yLabel, default: "")
         showGrid = c.value(Bool.self, forKey: .showGrid, default: true)
         if let wrapped = try? c.decode([GraphSeriesProxy].self, forKey: .series) {
-            series = wrapped.compactMap(\.series)
+            series = wrapped.compactMap(\.series).filter { $0.points.count >= 2 }
         } else {
             series = []
         }

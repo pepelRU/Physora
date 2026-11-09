@@ -76,6 +76,9 @@ final class SolverViewModel {
             throw CancellationError()
         } catch {
             isBusy = false
+            if Task.isCancelled {
+                throw CancellationError()
+            }
             if let aiError = error as? AIError {
                 errorMessage = aiError.localizedDescription
             } else {
