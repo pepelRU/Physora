@@ -30,7 +30,7 @@ struct ChatComposerView: View {
             HStack(alignment: .bottom, spacing: 9) {
                 photoPickerButton
 
-                TextField("Опишите задачу или прикрепите фото…", text: $text, axis: .vertical)
+                TextField("Задача или фото…", text: $text, axis: .vertical)
                     .font(.body)
                     .lineLimit(1...5)
                     .focused($isFocused)

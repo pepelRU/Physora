@@ -39,25 +39,38 @@ struct ChatGreetingView: View {
             }
 
             if !suggestions.isEmpty {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        ForEach(suggestions, id: \.self) { suggestion in
-                            Button {
-                                onSuggestion(suggestion)
-                            } label: {
+                VStack(spacing: 8) {
+                    ForEach(suggestions, id: \.self) { suggestion in
+                        Button {
+                            onSuggestion(suggestion)
+                        } label: {
+                            HStack(alignment: .center, spacing: 10) {
                                 Text(suggestion)
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .foregroundStyle(.primary)
-                                    .lineLimit(1)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .overlay(Capsule().strokeBorder(Color.physoraStroke, lineWidth: 1))
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 8)
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
                             }
-                            .buttonStyle(PressableScaleButtonStyle())
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 11)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                Color.physoraSurface,
+                                in: RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                    .strokeBorder(Color.physoraStroke, lineWidth: 1)
+                            )
                         }
+                        .buttonStyle(PressableScaleButtonStyle())
                     }
                 }
-                .scrollIndicators(.hidden)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
