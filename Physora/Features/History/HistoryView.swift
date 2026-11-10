@@ -8,65 +8,57 @@ struct HistoryView: View {
     @Query(sort: \SolvedProblem.createdAt, order: .reverse) private var problems: [SolvedProblem]
 
     @State private var searchText = ""
-    @AppStorage("physora.historySort") private var sortRawValue = HistorySortOrder.newest.rawValue
     @State private var showingClearConfirmation = false
     @State private var errorMessage: String?
 
-    private var sortOrder: HistorySortOrder {
-        HistorySortOrder(rawValue: sortRawValue) ?? .newest
+    private var chatGroups: [ChatGroup] {
+        let grouped = Dictionary(grouping: problems) { $0.effectiveChatID }
+        return grouped.compactMap { id, items in
+            let ordered = items.sorted { $0.createdAt < $1.createdAt }
+            guard let first = ordered.first, let last = ordered.last else { return nil }
+            return ChatGroup(
+                id: id,
+                title: first.prompt,
+                preview: last.answerSummary,
+                topic: first.topic,
+                date: last.createdAt,
+                count: ordered.count,
+                problems: ordered
+            )
+        }
+        .sorted { $0.date > $1.date }
     }
 
-    private var filteredProblems: [SolvedProblem] {
-        var result = appState.historyFilter == .favorites
-            ? problems.filter(\.isFavorite)
-            : problems
+    private var filteredGroups: [ChatGroup] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !query.isEmpty {
-            result = result.filter {
-                $0.prompt.localizedStandardContains(query)
-                    || $0.topic.localizedStandardContains(query)
-                    || $0.answerSummary.localizedStandardContains(query)
-                    || $0.modelTitle.localizedStandardContains(query)
-            }
-        }
-        return result.sorted {
-            sortOrder == .newest
-                ? $0.createdAt > $1.createdAt
-                : $0.createdAt < $1.createdAt
+        guard !query.isEmpty else { return chatGroups }
+        return chatGroups.filter { group in
+            group.title.localizedStandardContains(query)
+                || group.preview.localizedStandardContains(query)
+                || group.topic.localizedStandardContains(query)
+                || group.problems.contains {
+                    $0.prompt.localizedStandardContains(query)
+                        || $0.answerSummary.localizedStandardContains(query)
+                }
         }
     }
 
     var body: some View {
-        @Bindable var appState = appState
         NavigationStack {
             ZStack {
                 PhysoraBackground()
-                VStack(spacing: 0) {
-                    Picker("Фильтр истории", selection: $appState.historyFilter) {
-                        ForEach(HistoryFilter.allCases) { filter in
-                            Text(filter.title).tag(filter)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 18)
-                    .padding(.top, 8)
-                    .padding(.bottom, 10)
 
-                    if problems.isEmpty {
-                        emptyHistory
-                    } else if filteredProblems.isEmpty {
-                        emptyFilteredState
-                    } else {
-                        historyList
-                    }
+                if problems.isEmpty {
+                    emptyState
+                } else if filteredGroups.isEmpty {
+                    emptySearchState
+                } else {
+                    chatList
                 }
             }
-            .navigationTitle("История")
+            .navigationTitle("Чаты")
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, prompt: "Условие, тема или ответ")
-            .navigationDestination(for: SolutionRoute.self) { route in
-                SolutionLoaderView(problemID: route.id)
-            }
+            .searchable(text: $searchText, prompt: "Найти чат или задачу")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -74,10 +66,16 @@ struct HistoryView: View {
                     } label: {
                         Image(systemName: "xmark")
                     }
-                    .accessibilityLabel("Закрыть историю")
+                    .accessibilityLabel("Закрыть чаты")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    sortMenu
+                    Button {
+                        appState.startNewChat()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                    .accessibilityLabel("Новый чат")
                 }
                 if !problems.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -86,21 +84,21 @@ struct HistoryView: View {
                         } label: {
                             Image(systemName: "trash")
                         }
-                        .accessibilityLabel("Очистить историю")
+                        .accessibilityLabel("Очистить все чаты")
                     }
                 }
             }
             .confirmationDialog(
-                "Очистить всю историю?",
+                "Очистить все чаты?",
                 isPresented: $showingClearConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Удалить все задачи", role: .destructive) {
-                    clearHistory()
+                Button("Удалить все чаты", role: .destructive) {
+                    clearAll()
                 }
                 Button("Отмена", role: .cancel) {}
             } message: {
-                Text("Будет удалено решений: \(problems.count). Это действие нельзя отменить.")
+                Text("Будет удалено задач: \(problems.count). Это действие нельзя отменить.")
             }
             .alert(
                 "Ошибка",
@@ -116,55 +114,35 @@ struct HistoryView: View {
         }
     }
 
-    private var historyList: some View {
+    private var chatList: some View {
         List {
-            if !searchText.isEmpty {
-                Text("Найдено: \(filteredProblems.count)")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 22, bottom: 2, trailing: 22))
-            }
-            ForEach(filteredProblems) { problem in
-                NavigationLink(value: SolutionRoute(id: problem.id)) {
-                    HistoryRow(problem: problem)
+            ForEach(filteredGroups) { group in
+                Button {
+                    appState.openChat(group.id)
+                    Haptics.light()
+                    dismiss()
+                } label: {
+                    ChatGroupRow(
+                        group: group,
+                        isCurrent: group.id == appState.currentChatID
+                    )
                 }
                 .buttonStyle(PressableScaleButtonStyle())
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 5, leading: 18, bottom: 5, trailing: 18))
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button {
-                        toggleFavorite(problem)
-                    } label: {
-                        Label(
-                            problem.isFavorite ? "Убрать" : "В избранное",
-                            systemImage: problem.isFavorite ? "star.slash" : "star.fill"
-                        )
-                    }
-                    .tint(.physoraAmber)
-                }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
-                        delete(problem)
+                        delete(group)
                     } label: {
                         Label("Удалить", systemImage: "trash")
                     }
                 }
                 .contextMenu {
-                    Button {
-                        toggleFavorite(problem)
-                    } label: {
-                        Label(
-                            problem.isFavorite ? "Убрать из избранного" : "В избранное",
-                            systemImage: problem.isFavorite ? "star.slash" : "star"
-                        )
-                    }
                     Button(role: .destructive) {
-                        delete(problem)
+                        delete(group)
                     } label: {
-                        Label("Удалить задачу", systemImage: "trash")
+                        Label("Удалить чат", systemImage: "trash")
                     }
                 }
             }
@@ -175,156 +153,120 @@ struct HistoryView: View {
         .scrollIndicators(.hidden)
     }
 
-    private var emptyHistory: some View {
+    private var emptyState: some View {
         ContentUnavailableView {
-            Label("История пока пуста", systemImage: "clock.arrow.circlepath")
+            Label("Чатов пока нет", systemImage: "bubble.left.and.bubble.right")
         } description: {
-            Text("Решённые задачи сохраняются на этом iPhone и будут доступны без интернета.")
+            Text("Начните новый чат и пришлите задачу текстом или фотографией.")
         } actions: {
-            Button("Решить первую задачу") {
-                appState.selectedTab = .home
+            Button("Новый чат") {
+                appState.startNewChat()
                 dismiss()
             }
             .buttonStyle(.glassProminent)
             .tint(.physoraAccent)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var emptyFilteredState: some View {
+    private var emptySearchState: some View {
         ContentUnavailableView {
-            Label(
-                searchText.isEmpty ? "В избранном пусто" : "Ничего не найдено",
-                systemImage: searchText.isEmpty ? "star" : "magnifyingglass"
-            )
+            Label("Ничего не найдено", systemImage: "magnifyingglass")
         } description: {
-            Text(
-                searchText.isEmpty
-                    ? "Отмечайте лучшие решения звёздочкой — они появятся здесь."
-                    : "Попробуйте изменить запрос или выбрать другой фильтр."
-            )
+            Text("Попробуйте изменить запрос.")
         } actions: {
-            if searchText.isEmpty {
-                Button("Показать все задачи") {
-                    appState.historyFilter = .all
-                }
-            } else {
-                Button("Сбросить поиск") {
-                    searchText = ""
-                }
+            Button("Сбросить поиск") {
+                searchText = ""
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var sortMenu: some View {
-        Menu {
-            ForEach(HistorySortOrder.allCases) { order in
-                Button {
-                    sortRawValue = order.rawValue
-                } label: {
-                    Label(order.title, systemImage: order == sortOrder ? "checkmark" : order.systemImage)
-                }
-            }
-        } label: {
-            Image(systemName: "arrow.up.arrow.down")
-        }
-        .accessibilityLabel("Сортировка по дате")
-    }
-
-    private func toggleFavorite(_ problem: SolvedProblem) {
-        problem.isFavorite.toggle()
-        do {
-            try modelContext.save()
-            Haptics.light()
-        } catch {
-            problem.isFavorite.toggle()
-            errorMessage = "Не удалось обновить избранное: \(error.localizedDescription)"
-        }
-    }
-
-    private func delete(_ problem: SolvedProblem) {
+    private func delete(_ group: ChatGroup) {
         withAnimation {
-            modelContext.delete(problem)
-            do {
-                try modelContext.save()
-            } catch {
-                errorMessage = "Не удалось удалить задачу: \(error.localizedDescription)"
-            }
-        }
-    }
-
-    private func clearHistory() {
-        withAnimation {
-            for problem in problems {
+            for problem in group.problems {
                 modelContext.delete(problem)
+            }
+            if group.id == appState.currentChatID {
+                appState.startNewChat()
             }
             do {
                 try modelContext.save()
                 Haptics.success()
             } catch {
-                errorMessage = "Не удалось очистить историю: \(error.localizedDescription)"
+                errorMessage = "Не удалось удалить чат: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func clearAll() {
+        withAnimation {
+            for problem in problems {
+                modelContext.delete(problem)
+            }
+            appState.startNewChat()
+            do {
+                try modelContext.save()
+                Haptics.success()
+            } catch {
+                errorMessage = "Не удалось очистить чаты: \(error.localizedDescription)"
             }
         }
     }
 }
 
-enum HistorySortOrder: String, CaseIterable, Identifiable {
-    case newest
-    case oldest
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .newest: "Сначала новые"
-        case .oldest: "Сначала старые"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .newest: "arrow.down"
-        case .oldest: "arrow.up"
-        }
-    }
+private struct ChatGroup: Identifiable {
+    let id: UUID
+    let title: String
+    let preview: String
+    let topic: String
+    let date: Date
+    let count: Int
+    let problems: [SolvedProblem]
 }
 
-private struct HistoryRow: View {
-    let problem: SolvedProblem
+private struct ChatGroupRow: View {
+    let group: ChatGroup
+    let isCurrent: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 13) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.physoraAccent.opacity(0.10))
-                    .frame(width: 40, height: 40)
-                Image(systemName: problem.isFavorite ? "star.fill" : "function")
-                    .font(.system(size: 15, weight: .semibold, design: problem.isFavorite ? .default : .serif))
-                    .foregroundStyle(problem.isFavorite ? Color.physoraAmber : Color.physoraAccent)
-            }
-            VStack(alignment: .leading, spacing: 7) {
-                Text(problem.prompt)
-                    .font(.subheadline)
+                Circle()
+                    .fill(Color.physoraSurfaceMuted)
+                    .frame(width: 42, height: 42)
+                Image(systemName: "bubble.left.fill")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(problem.answerSummary)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.physoraAccent)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(group.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    Spacer(minLength: 4)
+                    if isCurrent {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
+                }
+
+                Text(group.preview)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
+
                 HStack(spacing: 6) {
-                    if !problem.topic.isEmpty {
-                        Text(problem.topic)
+                    if !group.topic.isEmpty {
+                        Text(group.topic)
                             .lineLimit(1)
                     }
-                    if !problem.topic.isEmpty {
-                        Circle().fill(Color.physoraSeparator).frame(width: 2.5, height: 2.5)
-                    }
-                    Text(problem.createdAt.physoraShortDate)
                     Text("·")
-                    Text(problem.modelTitle)
+                    Text(group.date.physoraShortDate)
+                    Text("·")
+                    Text("\(group.count) \(solutionsWord(group.count))")
                     Spacer(minLength: 0)
                 }
                 .font(.caption2)
@@ -332,12 +274,23 @@ private struct HistoryRow: View {
             }
         }
         .padding(15)
-        .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.physoraStroke, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 21, style: .continuous)
+                .strokeBorder(isCurrent ? Color.primary.opacity(0.35) : Color.physoraStroke, lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(problem.prompt). Ответ: \(problem.answerSummary)")
+        .accessibilityLabel("\(group.title). Задач: \(group.count)")
+    }
+
+    private func solutionsWord(_ count: Int) -> String {
+        let remainder100 = count % 100
+        let remainder10 = count % 10
+        if (11...14).contains(remainder100) { return "решений" }
+        switch remainder10 {
+        case 1: return "решение"
+        case 2, 3, 4: return "решения"
+        default: return "решений"
+        }
     }
 }

@@ -25,6 +25,15 @@ struct TaskPhoto: Identifiable {
         quality: CGFloat = 0.82
     ) -> TaskPhoto? {
         guard let image = UIImage(data: rawData) else { return nil }
+        return compressed(from: image, maximumDimension: maximumDimension, quality: quality)
+    }
+
+    @MainActor
+    static func compressed(
+        from image: UIImage,
+        maximumDimension: CGFloat = 1_600,
+        quality: CGFloat = 0.82
+    ) -> TaskPhoto? {
         let longestSide = max(image.size.width, image.size.height)
         let ratio = longestSide > maximumDimension ? maximumDimension / longestSide : 1
         let targetSize = CGSize(

@@ -63,23 +63,24 @@ struct PhysicsNotebookSheet: View {
     private var columns: some View {
         HStack(alignment: .top, spacing: 0) {
             givenColumn
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 9)
                 .padding(.vertical, 13)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(minWidth: 104, maxWidth: .infinity, alignment: .topLeading)
 
             Divider().overlay(Color.physoraSeparator)
 
             siColumn
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 8)
                 .padding(.vertical, 13)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(minWidth: 66, maxWidth: .infinity, alignment: .topLeading)
 
             Divider().overlay(Color.physoraSeparator)
 
             solutionColumn
                 .padding(.horizontal, 10)
                 .padding(.vertical, 13)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(minWidth: 152, maxWidth: .infinity, alignment: .topLeading)
+                .layoutPriority(1)
         }
     }
 

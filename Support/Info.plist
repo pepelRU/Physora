@@ -26,6 +26,8 @@
 	<string>public.app-category.education</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна, чтобы сфотографировать условие задачи и отправить его в DeepSeek.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Physora. Все права защищены.</string>
 	<key>UIApplicationSceneManifest</key>

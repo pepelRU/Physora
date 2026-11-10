@@ -28,7 +28,8 @@ actor DeepSeekService: AIService {
     func solve(
         problem: String,
         preferences: SolutionPreferences,
-        images: [Data]
+        images: [Data],
+        history: [ChatMemoryTurn] = []
     ) async throws -> PhysicsSolution {
         guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
         let trimmed = problem.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -48,6 +49,24 @@ actor DeepSeekService: AIService {
         var firstMessages: [ChatMessage] = [
             ChatMessage(role: "system", text: system)
         ]
+        for turn in history.suffix(8) {
+            let prompt = turn.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !prompt.isEmpty else { continue }
+            firstMessages.append(ChatMessage(role: "user", text: String(prompt.prefix(3_000))))
+            let topic = turn.topic.trimmingCharacters(in: .whitespacesAndNewlines)
+            let answer = turn.answer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let summary = [
+                topic.isEmpty ? nil : "Тема: \(topic).",
+                answer.isEmpty ? nil : "Ответ предыдущей задачи: \(answer)."
+            ]
+            .compactMap { $0 }
+            .joined(separator: " ")
+            if !summary.isEmpty {
+                firstMessages.append(
+                    ChatMessage(role: "assistant", text: String(summary.prefix(1_500)))
+                )
+            }
+        }
         if images.isEmpty {
             firstMessages.append(ChatMessage(role: "user", text: userText))
         } else {

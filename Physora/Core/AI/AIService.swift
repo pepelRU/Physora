@@ -9,7 +9,8 @@ protocol AIService: Sendable {
     func solve(
         problem: String,
         preferences: SolutionPreferences,
-        images: [Data]
+        images: [Data],
+        history: [ChatMemoryTurn]
     ) async throws -> PhysicsSolution
     func checkConnection() async throws -> ConnectionCheck
 }

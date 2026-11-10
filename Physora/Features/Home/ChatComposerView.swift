@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import UIKit
 
 struct ChatComposerView: View {
     @Binding var text: String
@@ -12,6 +13,9 @@ struct ChatComposerView: View {
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isLoadingPhotos = false
     @State private var photoError: String?
+    @State private var showingPhotoSources = false
+    @State private var showingLibrary = false
+    @State private var showingCamera = false
 
     private let characterLimit = 4_000
     private let photoLimit = 4
@@ -67,7 +71,35 @@ struct ChatComposerView: View {
         .padding(.horizontal, 14)
         .padding(.top, 8)
         .padding(.bottom, 6)
-        .background(.ultraThinMaterial)
+        .background(Color.physoraBackground)
+        .confirmationDialog(
+            "Добавить фотографию",
+            isPresented: $showingPhotoSources,
+            titleVisibility: .visible
+        ) {
+            Button("Медиатека") {
+                showingLibrary = true
+            }
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Камера") {
+                    showingCamera = true
+                }
+            }
+            Button("Отмена", role: .cancel) {}
+        }
+        .photosPicker(
+            isPresented: $showingLibrary,
+            selection: $pickerItems,
+            maxSelectionCount: max(1, photoLimit - photos.count),
+            matching: .images,
+            photoLibrary: .shared()
+        )
+        .fullScreenCover(isPresented: $showingCamera) {
+            CameraPicker { image in
+                addCameraImage(image)
+            }
+            .ignoresSafeArea()
+        }
         .onChange(of: pickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(newItems) }
@@ -80,12 +112,9 @@ struct ChatComposerView: View {
     }
 
     private var photoPickerButton: some View {
-        PhotosPicker(
-            selection: $pickerItems,
-            maxSelectionCount: max(1, photoLimit - photos.count),
-            matching: .images,
-            photoLibrary: .shared()
-        ) {
+        Button {
+            showingPhotoSources = true
+        } label: {
             ZStack {
                 if isLoadingPhotos {
                     ProgressView()
@@ -172,6 +201,18 @@ struct ChatComposerView: View {
         }
         .scrollIndicators(.hidden)
         .padding(.horizontal, 3)
+    }
+
+    @MainActor
+    private func addCameraImage(_ image: UIImage) {
+        guard photos.count < photoLimit else { return }
+        guard let photo = TaskPhoto.compressed(from: image) else {
+            photoError = "Не удалось подготовить фотографию. Попробуйте ещё раз."
+            return
+        }
+        photoError = nil
+        photos.append(photo)
+        Haptics.light()
     }
 
     @MainActor

@@ -10,6 +10,7 @@ final class SolvedProblem {
     var createdAt: Date
     var modelID: String
     var isFavorite: Bool
+    var chatID: UUID?
     var solutionData: Data
 
     init(
@@ -17,6 +18,7 @@ final class SolvedProblem {
         prompt: String,
         solution: PhysicsSolution,
         modelID: String,
+        chatID: UUID? = nil,
         createdAt: Date = .now,
         isFavorite: Bool = false
     ) {
@@ -27,7 +29,12 @@ final class SolvedProblem {
         self.createdAt = createdAt
         self.modelID = modelID
         self.isFavorite = isFavorite
+        self.chatID = chatID
         self.solutionData = (try? JSONEncoder().encode(solution)) ?? Data()
+    }
+
+    var effectiveChatID: UUID {
+        chatID ?? ChatIdentity.legacyChatID
     }
 
     var solution: PhysicsSolution? {

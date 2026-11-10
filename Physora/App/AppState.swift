@@ -92,18 +92,10 @@ enum AppTheme: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum HistoryFilter: String, CaseIterable, Identifiable {
-    case all
-    case favorites
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .all: "Все задачи"
-        case .favorites: "Избранное"
-        }
-    }
+/// Stable identifiers for chat grouping. Old solutions without a chat ID are
+/// shown as one legacy conversation instead of being lost.
+enum ChatIdentity {
+    static let legacyChatID = UUID(uuidString: "A11CE000-0000-4000-8000-000000000001")!
 }
 
 /// App-wide, non-secret preferences and navigational intent.
@@ -122,13 +114,18 @@ final class AppState {
         static let showAnalysis = "physora.showAnalysis"
         static let separateFormulas = "physora.separateFormulas"
         static let separateCalculations = "physora.separateCalculations"
+        static let currentChatID = "physora.currentChatID"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored let persistenceMessage: String?
 
     var selectedTab: AppTab = .home
-    var historyFilter: HistoryFilter = .all
+    var currentChatID: UUID = ChatIdentity.legacyChatID {
+        didSet {
+            defaults.set(currentChatID.uuidString, forKey: DefaultsKey.currentChatID)
+        }
+    }
     var composerDraft: String = ""
     var composerFocusRequest: Int = 0
     var hasStoredAPIKey: Bool
@@ -194,6 +191,16 @@ final class AppState {
         self.showSeparateFormulas = defaults.object(forKey: DefaultsKey.separateFormulas) as? Bool ?? false
         self.showSeparateCalculations = defaults.object(forKey: DefaultsKey.separateCalculations) as? Bool ?? false
         self.hasStoredAPIKey = KeychainManager.hasAPIKey()
+        self.currentChatID = defaults
+            .string(forKey: DefaultsKey.currentChatID)
+            .flatMap(UUID.init(uuidString:)) ?? ChatIdentity.legacyChatID
+
+        #if DEBUG
+        if ScreenshotMode.isActive {
+            self.selectedTab = ScreenshotMode.tab ?? .home
+            self.currentChatID = ScreenshotDemo.chatID
+        }
+        #endif
     }
 
     var solutionPreferences: SolutionPreferences {
@@ -214,6 +221,18 @@ final class AppState {
 
     func showSettings() {
         selectedTab = .settings
+    }
+
+    func startNewChat() {
+        currentChatID = UUID()
+        composerDraft = ""
+        composerFocusRequest += 1
+        selectedTab = .home
+    }
+
+    func openChat(_ id: UUID) {
+        currentChatID = id
+        selectedTab = .home
     }
 
     func prepareReSolution(prompt: String) {

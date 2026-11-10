@@ -268,6 +268,22 @@ struct MathParser {
 // MARK: - Normalization and symbols
 
 enum MathNormalizer {
+    private static let superscriptMap: [Character: Character] = [
+        "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
+        "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9",
+        "⁺": "+", "⁻": "-", "⁼": "=", "⁽": "(", "⁾": ")",
+        "ⁿ": "n", "ⁱ": "i"
+    ]
+
+    private static let subscriptMap: [Character: Character] = [
+        "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4",
+        "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9",
+        "₊": "+", "₋": "-", "₌": "=", "₍": "(", "₎": ")",
+        "ₐ": "a", "ₑ": "e", "ₒ": "o", "ₓ": "x", "ₕ": "h",
+        "ₖ": "k", "ₗ": "l", "ₘ": "m", "ₙ": "n", "ₚ": "p",
+        "ₛ": "s", "ₜ": "t"
+    ]
+
     static func normalize(_ raw: String) -> String {
         var value = raw
             .replacingOccurrences(of: "\u{00A0}", with: " ")
@@ -282,8 +298,43 @@ enum MathNormalizer {
             .replacingOccurrences(of: "\\left.", with: "")
             .replacingOccurrences(of: "\\right.", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        value = normalizeScripts(value)
         value = value.replacingOccurrences(of: "**", with: "·")
         return value
+    }
+
+    /// Converts Unicode superscripts/subscripts (м/с², 10⁻³, m₀) into the
+    /// parser's explicit script syntax so exponents are always rendered by the
+    /// math view instead of depending on font glyph coverage.
+    private static func normalizeScripts(_ value: String) -> String {
+        var result = ""
+        var index = value.startIndex
+        while index < value.endIndex {
+            let character = value[index]
+            if let mapped = superscriptMap[character] {
+                result.append("^")
+                result.append(mapped)
+                index = value.index(after: index)
+                while index < value.endIndex, let next = superscriptMap[value[index]] {
+                    result.append(next)
+                    index = value.index(after: index)
+                }
+                continue
+            }
+            if let mapped = subscriptMap[character] {
+                result.append("_")
+                result.append(mapped)
+                index = value.index(after: index)
+                while index < value.endIndex, let next = subscriptMap[value[index]] {
+                    result.append(next)
+                    index = value.index(after: index)
+                }
+                continue
+            }
+            result.append(character)
+            index = value.index(after: index)
+        }
+        return result
     }
 }
 
@@ -424,20 +475,32 @@ struct FormulaView: View {
         if expression.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             EmptyView()
         } else {
-            ScrollView(.horizontal) {
-                MathNodesView(
-                    nodes: nodes,
-                    size: resolvedSize,
-                    color: foregroundStyle
-                )
-                .padding(.vertical, 3)
-                .padding(.horizontal, 1)
+            ViewThatFits(in: .horizontal) {
+                mathContent(size: resolvedSize)
+                mathContent(size: max(10, resolvedSize * 0.90))
+                mathContent(size: max(10, resolvedSize * 0.80))
+                mathContent(size: max(10, resolvedSize * 0.70))
+                mathContent(size: max(10, resolvedSize * 0.60))
+                ScrollView(.horizontal) {
+                    mathContent(size: resolvedSize)
+                }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(MathParser.plainText(expression))
             .accessibilityAddTraits(.isStaticText)
         }
+    }
+
+    private func mathContent(size: CGFloat) -> some View {
+        MathNodesView(
+            nodes: nodes,
+            size: size,
+            color: foregroundStyle
+        )
+        .padding(.vertical, 3)
+        .padding(.horizontal, 1)
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private var resolvedSize: CGFloat {

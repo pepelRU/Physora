@@ -10,6 +10,9 @@ struct PhysoraApp: App {
     init() {
         let bootstrap = PersistenceController.makeBootstrap()
         self.container = bootstrap.container
+        #if DEBUG
+        ScreenshotDemo.seedIfNeeded(in: bootstrap.container.mainContext)
+        #endif
         _appState = State(initialValue: AppState(persistenceMessage: bootstrap.failureMessage))
     }
 

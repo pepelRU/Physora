@@ -36,4 +36,11 @@ final class MathParserTests: XCTestCase {
         XCTAssertNoThrow(MathParser.parse("^2 + _"))
         XCTAssertNoThrow(MathParser.parse(String(repeating: "{", count: 100) + "x" + String(repeating: "}", count: 100)))
     }
+
+    func testUnicodeSuperscriptsAndSubscriptsBecomeRenderedScripts() {
+        XCTAssertEqual(MathParser.plainText("a = 1 м/с²"), "a = 1 м/с²")
+        XCTAssertEqual(MathParser.plainText("10⁻³ кг"), "10⁻³ кг")
+        XCTAssertEqual(MathParser.plainText("m₀ + x₁"), "m₀ + x₁")
+        XCTAssertFalse(MathParser.plainText("a = 1 м/с²").contains("^"))
+    }
 }

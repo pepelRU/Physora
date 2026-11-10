@@ -53,7 +53,8 @@ final class SolverViewModel {
         apiKey: String,
         modelID: String,
         preferences: SolutionPreferences,
-        images: [Data] = []
+        images: [Data] = [],
+        history: [ChatMemoryTurn] = []
     ) async throws -> PhysicsSolution {
         isBusy = true
         errorMessage = nil
@@ -65,7 +66,8 @@ final class SolverViewModel {
             let raw = try await service.solve(
                 problem: problem,
                 preferences: preferences,
-                images: images
+                images: images,
+                history: history
             )
             try Task.checkCancellation()
             phase = .validating

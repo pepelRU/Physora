@@ -282,6 +282,19 @@ struct AnswerQuantity: Codable, Hashable, Sendable {
 
 // MARK: - AI requests and responses
 
+/// A previous turn of the active chat, used as conversational memory.
+struct ChatMemoryTurn: Hashable, Sendable {
+    var prompt: String
+    var answer: String
+    var topic: String
+
+    init(prompt: String, answer: String, topic: String = "") {
+        self.prompt = prompt
+        self.answer = answer
+        self.topic = topic
+    }
+}
+
 struct SolutionPreferences: Sendable, Equatable {
     var explanationDetail: ExplanationDetail
     var autoSI: Bool

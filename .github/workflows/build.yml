@@ -95,16 +95,39 @@ jobs:
           xcrun simctl boot "$UDID" 2>/dev/null || true
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
+          xcrun simctl status_bar "$UDID" override \
+            --time "9:41" \
+            --batteryState charged \
+            --batteryLevel 100 \
+            --wifiBars 3 \
+            --cellularBars 4 2>/dev/null || true
+          # Give SpringBoard time to finish its first-boot banners before capture.
+          sleep 15
+
+          capture() {
+            local name="$1"
+            shift
+            xcrun simctl terminate "$UDID" com.pepelru.physora 2>/dev/null || true
+            xcrun simctl launch "$UDID" com.pepelru.physora "$@" >/dev/null
+            sleep 4
+            xcrun simctl io "$UDID" screenshot "artifacts/${name}.png"
+          }
+
           xcrun simctl ui "$UDID" appearance light
-          xcrun simctl terminate "$UDID" com.pepelru.physora 2>/dev/null || true
-          xcrun simctl launch "$UDID" com.pepelru.physora
-          sleep 5
-          xcrun simctl io "$UDID" screenshot artifacts/home-light.png
+          capture home-light -physoraScreenshots -physoraTab home
+          capture solution-light -physoraScreenshots -physoraTab home -physoraScreen solution
+          capture settings-light -physoraScreenshots -physoraTab settings
+          capture reference-light -physoraScreenshots -physoraTab reference
+          capture chats-light -physoraScreenshots -physoraTab home -physoraScreen history
+          capture tools-light -physoraScreenshots -physoraTab home -physoraScreen tools
+
           xcrun simctl ui "$UDID" appearance dark
-          xcrun simctl terminate "$UDID" com.pepelru.physora 2>/dev/null || true
-          xcrun simctl launch "$UDID" com.pepelru.physora
-          sleep 4
-          xcrun simctl io "$UDID" screenshot artifacts/home-dark.png
+          capture home-dark -physoraScreenshots -physoraTab home
+          capture solution-dark -physoraScreenshots -physoraTab home -physoraScreen solution
+          capture settings-dark -physoraScreenshots -physoraTab settings
+          capture reference-dark -physoraScreenshots -physoraTab reference
+          capture chats-dark -physoraScreenshots -physoraTab home -physoraScreen history
+          capture tools-dark -physoraScreenshots -physoraTab home -physoraScreen tools
 
       - name: Build unsigned app for iPhone
         shell: bash

@@ -40,6 +40,7 @@ struct SolutionDetailView: View {
         .background(PhysoraBackground())
         .navigationTitle("Решение")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
