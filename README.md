@@ -10,7 +10,7 @@
 
 ## Скачать IPA
 
-**[Скачать Physora.ipa](https://github.com/pepelRU/Physora/releases/download/latest/Physora.ipa)** — unsigned-сборка для iOS 26+ (arm64, около 2,8 МБ), собранная GitHub Actions.
+**[Скачать Physora.ipa](https://github.com/pepelRU/Physora/releases/download/latest/Physora.ipa)** — unsigned-сборка для iOS 26+ (arm64, около 1,9 МБ), собранная GitHub Actions.
 
 Сборка не подписана Apple Development-сертификатом. Для установки используйте LiveContainer/аналогичное окружение либо откройте `Physora.xcodeproj` и запустите приложение со своей Development Team. Обычный iPhone без подписи IPA не установит.
 

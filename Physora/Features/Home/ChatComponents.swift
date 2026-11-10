@@ -49,7 +49,7 @@ struct ChatGreetingView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.primary)
                                     .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
+                                    .lineLimit(3)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: 8)
                                 Image(systemName: "arrow.up.right")
