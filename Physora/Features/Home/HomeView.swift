@@ -205,7 +205,10 @@ struct HomeView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             ChatComposerView(
-                text: $appState.composerDraft,
+                text: Binding(
+                    get: { appState.composerDraft },
+                    set: { appState.composerDraft = $0 }
+                ),
                 photos: $photos,
                 isFocused: $isComposerFocused,
                 isSending: isSending,
