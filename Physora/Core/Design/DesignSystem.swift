@@ -1,71 +1,28 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Brand palette
+// MARK: - Monochrome palette
 
 extension Color {
-    static let physoraAccent = Color(red: 56 / 255, green: 169 / 255, blue: 255 / 255)
-    static let physoraAccentDeep = Color(red: 22 / 255, green: 122 / 255, blue: 214 / 255)
-    static let physoraBackground = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.027, green: 0.043, blue: 0.075, alpha: 1)
-            : UIColor(red: 0.956, green: 0.973, blue: 0.992, alpha: 1)
-    })
-    static let physoraSurface = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.067, green: 0.094, blue: 0.135, alpha: 1)
-            : UIColor.white
-    })
-    static let physoraSurfaceMuted = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.094, green: 0.129, blue: 0.180, alpha: 1)
-            : UIColor(red: 0.925, green: 0.949, blue: 0.976, alpha: 1)
-    })
-    static let physoraStroke = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor.white.withAlphaComponent(0.09)
-            : UIColor(red: 0.071, green: 0.125, blue: 0.192, alpha: 0.08)
-    })
-    static let physoraSeparator = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor.white.withAlphaComponent(0.12)
-            : UIColor(red: 0.071, green: 0.125, blue: 0.192, alpha: 0.10)
-    })
-    static let physoraMint = Color(red: 0.29, green: 0.83, blue: 0.66)
-    static let physoraAmber = Color(red: 0.98, green: 0.66, blue: 0.28)
+    static let physoraAccent = Color(uiColor: .label)
+    static let physoraAccentDeep = Color(uiColor: .secondaryLabel)
+    static let physoraBackground = Color(uiColor: .systemGroupedBackground)
+    static let physoraSurface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let physoraSurfaceMuted = Color(uiColor: .tertiarySystemGroupedBackground)
+    static let physoraStroke = Color(uiColor: .separator).opacity(0.72)
+    static let physoraSeparator = Color(uiColor: .separator)
+    static let physoraMint = Color(uiColor: .secondaryLabel)
+    static let physoraAmber = Color(uiColor: .secondaryLabel)
 
-    static var physoraAccentSoft: Color { physoraAccent.opacity(0.12) }
-
-    static var physoraAccentGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color(red: 0.33, green: 0.80, blue: 1.0), physoraAccent, physoraAccentDeep],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+    static var physoraAccentSoft: Color { physoraAccent.opacity(0.09) }
 }
 
 // MARK: - Backgrounds and surfaces
 
 struct PhysoraBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        ZStack {
-            Color.physoraBackground
-            RadialGradient(
-                colors: [Color.physoraAccent.opacity(colorScheme == .dark ? 0.16 : 0.11), .clear],
-                center: .topLeading,
-                startRadius: 0,
-                endRadius: 520
-            )
-            LinearGradient(
-                colors: [.clear, Color.physoraAccent.opacity(colorScheme == .dark ? 0.035 : 0.05)],
-                startPoint: .top,
-                endPoint: .bottomTrailing
-            )
-        }
-        .ignoresSafeArea()
+        Color.physoraBackground
+            .ignoresSafeArea()
     }
 }
 
@@ -73,7 +30,6 @@ private struct PhysoraCardModifier: ViewModifier {
     var padding: CGFloat
     var cornerRadius: CGFloat
     var elevated: Bool
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
@@ -85,14 +41,6 @@ private struct PhysoraCardModifier: ViewModifier {
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(Color.physoraStroke, lineWidth: 1)
-            )
-            .shadow(
-                color: colorScheme == .dark
-                    ? Color.black.opacity(elevated ? 0.28 : 0.16)
-                    : Color(red: 0.08, green: 0.20, blue: 0.34).opacity(elevated ? 0.09 : 0.045),
-                radius: elevated ? 22 : 14,
-                x: 0,
-                y: elevated ? 10 : 6
             )
     }
 }
@@ -211,8 +159,28 @@ struct PhysoraSectionHeader: View {
 struct PressableScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .opacity(configuration.isPressed ? 0.88 : 1)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(configuration.isPressed ? 0.78 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+    }
+}
+
+struct PhysoraPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        let fill = colorScheme == .dark ? Color.white : Color.black
+        let foreground = colorScheme == .dark ? Color.black : Color.white
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(foreground)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 48)
+            .padding(.horizontal, 16)
+            .background(fill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .opacity(isEnabled ? (configuration.isPressed ? 0.72 : 1) : 0.32)
+            .scaleEffect(configuration.isPressed ? 0.99 : 1)
             .animation(.snappy(duration: 0.18), value: configuration.isPressed)
     }
 }
@@ -241,6 +209,7 @@ struct SmallIconButton: View {
 struct AtomMark: View {
     var size: CGFloat = 44
     var showsGlow: Bool = true
+    var tint: Color = .primary
 
     var body: some View {
         Canvas { context, canvasSize in
@@ -256,11 +225,11 @@ struct AtomMark: View {
                     width: canvasSize.width * 0.44,
                     height: canvasSize.height * 0.44
                 )
-                context.fill(Path(ellipseIn: glowRect), with: .color(Color.physoraAccent.opacity(0.16)))
+                context.fill(Path(ellipseIn: glowRect), with: .color(tint.opacity(0.08)))
             }
 
             let rotations: [Double] = [-31, 31, 89]
-            let opacities: [Double] = [0.95, 0.80, 0.58]
+            let opacities: [Double] = [0.95, 0.72, 0.48]
             for (index, degrees) in rotations.enumerated() {
                 let ellipseRect = CGRect(
                     x: center.x - rx,
@@ -275,7 +244,7 @@ struct AtomMark: View {
                 let path = Path(ellipseIn: ellipseRect).applying(transform)
                 context.stroke(
                     path,
-                    with: .color(Color.physoraAccent.opacity(opacities[index])),
+                    with: .color(tint.opacity(opacities[index])),
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
 
@@ -297,7 +266,7 @@ struct AtomMark: View {
                     width: radius * 2,
                     height: radius * 2
                 )
-                context.fill(Path(ellipseIn: rect), with: .color(Color(red: 0.74, green: 0.93, blue: 1)))
+                context.fill(Path(ellipseIn: rect), with: .color(tint))
             }
 
             let nucleusOuter = CGRect(
@@ -306,9 +275,9 @@ struct AtomMark: View {
                 width: canvasSize.width * 0.15,
                 height: canvasSize.width * 0.15
             )
-            context.fill(Path(ellipseIn: nucleusOuter), with: .color(Color.physoraAccent.opacity(0.38)))
+            context.fill(Path(ellipseIn: nucleusOuter), with: .color(tint.opacity(0.32)))
             let nucleusInner = nucleusOuter.insetBy(dx: canvasSize.width * 0.035, dy: canvasSize.width * 0.035)
-            context.fill(Path(ellipseIn: nucleusInner), with: .color(Color.white))
+            context.fill(Path(ellipseIn: nucleusInner), with: .color(tint))
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
@@ -321,24 +290,18 @@ struct BrandTile: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.05, green: 0.11, blue: 0.20),
-                            Color(red: 0.02, green: 0.05, blue: 0.10)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color.primary)
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8)
+                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8)
                 )
-            AtomMark(size: size * 0.76, showsGlow: true)
+            AtomMark(
+                size: size * 0.76,
+                showsGlow: false,
+                tint: Color(uiColor: .systemBackground)
+            )
         }
         .frame(width: size, height: size)
-        .shadow(color: Color.physoraAccent.opacity(0.25), radius: 10, y: 5)
         .accessibilityHidden(true)
     }
 }

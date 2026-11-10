@@ -75,16 +75,12 @@ struct AboutPhysoraView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .background(
-            LinearGradient(
-                colors: [Color.physoraAccent.opacity(0.13), Color.physoraAccent.opacity(0.03)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
+            Color.physoraSurface,
             in: RoundedRectangle(cornerRadius: 28, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(Color.physoraAccent.opacity(0.14), lineWidth: 1)
+                .strokeBorder(Color.physoraStroke, lineWidth: 1)
         )
     }
 }

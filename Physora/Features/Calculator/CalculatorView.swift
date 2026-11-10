@@ -178,11 +178,7 @@ struct CalculatorView: View {
         .frame(maxWidth: .infinity, alignment: .trailing)
         .padding(18)
         .background(
-            LinearGradient(
-                colors: [Color.physoraSurface, Color.physoraAccent.opacity(0.035)],
-                startPoint: .top,
-                endPoint: .bottomTrailing
-            ),
+            Color.physoraSurface,
             in: RoundedRectangle(cornerRadius: 25, style: .continuous)
         )
         .overlay(

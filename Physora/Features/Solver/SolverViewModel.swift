@@ -52,7 +52,8 @@ final class SolverViewModel {
         problem: String,
         apiKey: String,
         modelID: String,
-        preferences: SolutionPreferences
+        preferences: SolutionPreferences,
+        images: [Data] = []
     ) async throws -> PhysicsSolution {
         isBusy = true
         errorMessage = nil
@@ -61,7 +62,11 @@ final class SolverViewModel {
             let service = AIServiceFactory.make(provider: .deepSeek, apiKey: apiKey, modelID: modelID)
             try Task.checkCancellation()
             phase = .waitingForAI
-            let raw = try await service.solve(problem: problem, preferences: preferences)
+            let raw = try await service.solve(
+                problem: problem,
+                preferences: preferences,
+                images: images
+            )
             try Task.checkCancellation()
             phase = .validating
             let validated = try PhysicsEngine.prepare(raw, preferences: preferences)

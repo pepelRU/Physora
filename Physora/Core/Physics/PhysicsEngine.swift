@@ -16,6 +16,7 @@ enum PhysicsEngine {
         var solution = raw
         solution.schemaVersion = 1
         solution.topic = clean(solution.topic, limit: 80)
+        solution.problemStatement = clean(solution.problemStatement, limit: 12_000)
         solution.problemAnalysis = clean(solution.problemAnalysis, limit: 8_000)
         solution.explanation = clean(solution.explanation, limit: 10_000)
         solution.siNote = clean(solution.siNote, limit: 2_000)

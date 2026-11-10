@@ -6,12 +6,15 @@ struct PhysicsGraphView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var seriesColors: [Color] {
-        graph.series.enumerated().map { index, series in
-            if !series.color.isEmpty {
-                return RenderPalette.color(named: series.color, scheme: colorScheme)
-            }
-            let fallback: [Color] = [.physoraAccent, .physoraMint, .physoraAmber, .purple, .red]
-            return fallback[index % fallback.count]
+        let shades: [Color] = [
+            .primary,
+            Color.primary.opacity(0.62),
+            Color.secondary,
+            Color.secondary.opacity(0.55),
+            Color.primary.opacity(0.35)
+        ]
+        return graph.series.enumerated().map { index, _ in
+            shades[index % shades.count]
         }
     }
 

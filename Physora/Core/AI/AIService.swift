@@ -6,7 +6,11 @@ protocol AIService: Sendable {
     var provider: AIProvider { get }
     var modelID: String { get }
 
-    func solve(problem: String, preferences: SolutionPreferences) async throws -> PhysicsSolution
+    func solve(
+        problem: String,
+        preferences: SolutionPreferences,
+        images: [Data]
+    ) async throws -> PhysicsSolution
     func checkConnection() async throws -> ConnectionCheck
 }
 

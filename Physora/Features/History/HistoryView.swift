@@ -4,6 +4,7 @@ import SwiftUI
 struct HistoryView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \SolvedProblem.createdAt, order: .reverse) private var problems: [SolvedProblem]
 
     @State private var searchText = ""
@@ -67,6 +68,14 @@ struct HistoryView: View {
                 SolutionLoaderView(problemID: route.id)
             }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel("Закрыть историю")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     sortMenu
                 }
@@ -174,6 +183,7 @@ struct HistoryView: View {
         } actions: {
             Button("Решить первую задачу") {
                 appState.selectedTab = .home
+                dismiss()
             }
             .buttonStyle(.glassProminent)
             .tint(.physoraAccent)

@@ -23,17 +23,13 @@ struct SolutionDetailView: View {
                 metadataHeader
                 aiNotice
                 conditionSection
-                analysisSection
-                givenFindSection
-                siSection
-                formulasSection
-                solutionSection
-                calculationsSection
-                diagramsSection
-                graphsSection
-                answerSection
-                explanationSection
-                warningsSection
+                if appState.showAnalysis, !solution.problemAnalysis.isEmpty {
+                    analysisSection
+                }
+                PhysicsNotebookSheet(solution: solution, compact: false)
+                if appState.showExtraExplanations, !solution.explanation.isEmpty {
+                    explanationSection
+                }
                 sourceFooter
             }
             .padding(.horizontal, 18)
@@ -449,19 +445,12 @@ struct SolutionDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .background(
-            LinearGradient(
-                colors: [
-                    Color.physoraAccent.opacity(0.16),
-                    Color.physoraAccent.opacity(0.055)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
+            Color.physoraSurface,
             in: RoundedRectangle(cornerRadius: 25, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .strokeBorder(Color.physoraAccent.opacity(0.25), lineWidth: 1)
+                .strokeBorder(Color.physoraStroke, lineWidth: 1)
         )
         .contextMenu {
             Button {

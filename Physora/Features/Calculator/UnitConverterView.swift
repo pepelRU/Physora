@@ -213,16 +213,12 @@ struct UnitConverterView: View {
         }
         .padding(20)
         .background(
-            LinearGradient(
-                colors: [Color.physoraMint.opacity(0.13), Color.physoraAccent.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
+            Color.physoraSurface,
             in: RoundedRectangle(cornerRadius: 25, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .strokeBorder(Color.physoraMint.opacity(0.20), lineWidth: 1)
+                .strokeBorder(Color.physoraStroke, lineWidth: 1)
         )
         .animation(.snappy(duration: 0.25), value: formattedResult)
     }

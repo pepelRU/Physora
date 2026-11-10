@@ -66,10 +66,10 @@ struct AISettingsView: View {
                         HStack(spacing: 13) {
                             Image(systemName: model.id == "deepseek-flash" ? "bolt.fill" : "brain.fill")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(appState.modelID == model.id ? Color.physoraAccent : Color.secondary)
+                                .foregroundStyle(appState.modelID == model.id ? Color.primary : Color.secondary)
                                 .frame(width: 38, height: 38)
                                 .background(
-                                    (appState.modelID == model.id ? Color.physoraAccent : Color.secondary).opacity(0.09),
+                                    (appState.modelID == model.id ? Color.primary : Color.secondary).opacity(0.08),
                                     in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 )
                             VStack(alignment: .leading, spacing: 4) {
@@ -81,10 +81,10 @@ struct AISettingsView: View {
                                         Text("PRO")
                                             .font(.system(size: 7.5, weight: .bold))
                                             .tracking(0.5)
-                                            .foregroundStyle(Color.physoraAccent)
+                                            .foregroundStyle(.primary)
                                             .padding(.horizontal, 5)
                                             .padding(.vertical, 2)
-                                            .background(Color.physoraAccent.opacity(0.10), in: Capsule())
+                                            .background(Color.primary.opacity(0.08), in: Capsule())
                                     }
                                 }
                                 Text(model.id == "deepseek-flash"
@@ -100,14 +100,14 @@ struct AISettingsView: View {
                             Spacer(minLength: 4)
                             Image(systemName: appState.modelID == model.id ? "checkmark.circle.fill" : "circle")
                                 .font(.title3)
-                                .foregroundStyle(appState.modelID == model.id ? Color.physoraAccent : Color.secondary.opacity(0.45))
+                                .foregroundStyle(appState.modelID == model.id ? Color.primary : Color.secondary.opacity(0.45))
                         }
                         .padding(14)
                         .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 19, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 19, style: .continuous)
                                 .strokeBorder(
-                                    appState.modelID == model.id ? Color.physoraAccent.opacity(0.38) : Color.physoraStroke,
+                                    appState.modelID == model.id ? Color.primary.opacity(0.30) : Color.physoraStroke,
                                     lineWidth: 1
                                 )
                         )
@@ -115,6 +115,11 @@ struct AISettingsView: View {
                     .buttonStyle(PressableScaleButtonStyle())
                     .disabled(isTesting)
                 }
+                Text("Задачи с фотографиями автоматически обрабатывает deepseek-flash — он поддерживает изображения.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 4)
             }
         }
     }
@@ -303,7 +308,7 @@ struct AISettingsView: View {
             )
         case .failure(let message):
             statusRow(
-                color: Color(red: 0.96, green: 0.34, blue: 0.36),
+                color: Color.secondary,
                 title: "Не удалось подключиться",
                 detail: message
             )

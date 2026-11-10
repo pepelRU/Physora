@@ -10,13 +10,16 @@ struct SettingsView: View {
                 PhysoraBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        appearanceSection
+                        appearanceSection(interfaceSize: $appState.interfaceSize)
                         aiSection
                         solutionsSection(
                             explanationDetail: $appState.explanationDetail,
                             autoSI: $appState.autoSI,
                             buildDiagrams: $appState.buildDiagrams,
-                            extraExplanations: $appState.showExtraExplanations
+                            extraExplanations: $appState.showExtraExplanations,
+                            showAnalysis: $appState.showAnalysis,
+                            separateFormulas: $appState.showSeparateFormulas,
+                            separateCalculations: $appState.showSeparateCalculations
                         )
                         applicationSection
                     }
@@ -43,7 +46,7 @@ struct SettingsView: View {
         }
     }
 
-    private var appearanceSection: some View {
+    private func appearanceSection(interfaceSize: Binding<InterfaceSize>) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             PhysoraSectionHeader("Внешний вид", systemImage: "circle.lefthalf.filled")
             HStack(spacing: 9) {
@@ -57,7 +60,7 @@ struct SettingsView: View {
                         VStack(spacing: 8) {
                             Image(systemName: theme.icon)
                                 .font(.title3.weight(.medium))
-                                .foregroundStyle(appState.theme == theme ? Color.physoraAccent : Color.secondary)
+                                .foregroundStyle(appState.theme == theme ? Color.primary : Color.secondary)
                             Text(theme.title)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(appState.theme == theme ? Color.primary : Color.secondary)
@@ -66,14 +69,14 @@ struct SettingsView: View {
                         .padding(.vertical, 13)
                         .background(
                             appState.theme == theme
-                                ? Color.physoraAccent.opacity(0.10)
+                                ? Color.primary.opacity(0.07)
                                 : Color.physoraSurfaceMuted.opacity(0.55),
                             in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .strokeBorder(
-                                    appState.theme == theme ? Color.physoraAccent.opacity(0.4) : Color.physoraStroke,
+                                    appState.theme == theme ? Color.primary.opacity(0.32) : Color.physoraStroke,
                                     lineWidth: appState.theme == theme ? 1.4 : 0.8
                                 )
                         )
@@ -83,6 +86,33 @@ struct SettingsView: View {
                     .accessibilityValue(appState.theme == theme ? "Выбрано" : "")
                 }
             }
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Размер интерфейса")
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(interfaceSize.wrappedValue.title)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Picker("Размер интерфейса", selection: interfaceSize) {
+                    ForEach(InterfaceSize.allCases) { size in
+                        Text(size.title).tag(size)
+                    }
+                }
+                .pickerStyle(.segmented)
+                Text("Влияет на весь интерфейс, включая чат, историю, справочник и настройки.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(14)
+            .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 19, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 19, style: .continuous)
+                    .strokeBorder(Color.physoraStroke, lineWidth: 1)
+            )
+
             Text("Автоматический режим следует оформлению iOS.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
@@ -138,7 +168,10 @@ struct SettingsView: View {
         explanationDetail: Binding<ExplanationDetail>,
         autoSI: Binding<Bool>,
         buildDiagrams: Binding<Bool>,
-        extraExplanations: Binding<Bool>
+        extraExplanations: Binding<Bool>,
+        showAnalysis: Binding<Bool>,
+        separateFormulas: Binding<Bool>,
+        separateCalculations: Binding<Bool>
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             PhysoraSectionHeader("Решения", systemImage: "doc.text.magnifyingglass")
@@ -161,24 +194,45 @@ struct SettingsView: View {
                 SettingsDivider()
 
                 SettingsToggleRow(
+                    title: "Анализ задачи",
+                    subtitle: "Показывать разбор физической модели",
+                    systemImage: "text.magnifyingglass",
+                    isOn: showAnalysis
+                )
+                SettingsDivider()
+                SettingsToggleRow(
+                    title: "Отдельные формулы",
+                    subtitle: "Дублировать ключевые формулы вне решения",
+                    systemImage: "function",
+                    isOn: separateFormulas
+                )
+                SettingsDivider()
+                SettingsToggleRow(
+                    title: "Отдельные вычисления",
+                    subtitle: "Показывать сводку вычислений отдельным блоком",
+                    systemImage: "number",
+                    isOn: separateCalculations
+                )
+                SettingsDivider()
+                SettingsToggleRow(
+                    title: "Пояснения",
+                    subtitle: "Показывать физический смысл и проверку",
+                    systemImage: "text.quote",
+                    isOn: extraExplanations
+                )
+                SettingsDivider()
+                SettingsToggleRow(
                     title: "Перевод в СИ",
-                    subtitle: "Просить модель переводить величины в систему СИ",
+                    subtitle: "Переводить величины в систему СИ",
                     systemImage: "ruler",
                     isOn: autoSI
                 )
                 SettingsDivider()
                 SettingsToggleRow(
-                    title: "Автоматические чертежи",
-                    subtitle: "Строить схемы из графических примитивов, если они нужны",
+                    title: "Чертежи",
+                    subtitle: "Строить схемы из графических примитивов",
                     systemImage: "scribble.variable",
                     isOn: buildDiagrams
-                )
-                SettingsDivider()
-                SettingsToggleRow(
-                    title: "Дополнительные пояснения",
-                    subtitle: "Показывать физический смысл и проверку результата",
-                    systemImage: "text.quote",
-                    isOn: extraExplanations
                 )
             }
             .background(Color.physoraSurface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))

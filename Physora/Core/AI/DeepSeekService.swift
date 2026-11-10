@@ -25,41 +25,62 @@ actor DeepSeekService: AIService {
 
     // MARK: - Public API
 
-    func solve(problem: String, preferences: SolutionPreferences) async throws -> PhysicsSolution {
+    func solve(
+        problem: String,
+        preferences: SolutionPreferences,
+        images: [Data]
+    ) async throws -> PhysicsSolution {
         guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
         let trimmed = problem.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { throw AIError.emptyResponse }
+        guard !trimmed.isEmpty || !images.isEmpty else { throw AIError.emptyResponse }
+        guard images.count <= 4 else {
+            throw AIError.underlying("К задаче можно приложить не более четырёх фотографий.")
+        }
 
+        let requestModelID = images.isEmpty ? modelID : "deepseek-flash"
         let system = AIPromptBuilder.systemPrompt(preferences: preferences)
-        let user = AIPromptBuilder.userPrompt(problem: trimmed, preferences: preferences)
-        var messages: [ChatMessage] = [
-            ChatMessage(role: "system", content: system),
-            ChatMessage(role: "user", content: user)
+        let userText = AIPromptBuilder.userPrompt(
+            problem: trimmed,
+            preferences: preferences,
+            imageCount: images.count
+        )
+
+        var firstMessages: [ChatMessage] = [
+            ChatMessage(role: "system", text: system)
         ]
+        if images.isEmpty {
+            firstMessages.append(ChatMessage(role: "user", text: userText))
+        } else {
+            var parts = [ChatContentPart.text(userText)]
+            for image in images {
+                parts.append(.image(jpegData: image, detail: "high"))
+            }
+            firstMessages.append(ChatMessage(role: "user", parts: parts))
+        }
+        var messages = firstMessages
 
         var lastParseError: Error = AIError.malformedJSON
         for attempt in 0..<2 {
             try Task.checkCancellation()
-            let content = try await requestCompletion(messages: messages)
+            let content = try await requestCompletion(messages: messages, modelID: requestModelID)
             do {
                 var solution = try decodeSolution(from: content)
                 solution = try PhysicsEngine.prepare(solution, preferences: preferences)
                 return solution
             } catch let error as AIError {
                 if case .notPhysics = error { throw error }
-                if attempt == 0,
-                   (isRetryableParseFailure(error)) {
+                if attempt == 0, isRetryableParseFailure(error) {
                     lastParseError = error
-                    messages.append(ChatMessage(role: "assistant", content: String(content.prefix(24_000))))
-                    messages.append(ChatMessage(role: "user", content: AIPromptBuilder.repairPrompt()))
+                    messages.append(ChatMessage(role: "assistant", text: String(content.prefix(24_000))))
+                    messages.append(ChatMessage(role: "user", text: AIPromptBuilder.repairPrompt()))
                     continue
                 }
                 throw error
             } catch {
                 if attempt == 0 {
                     lastParseError = error
-                    messages.append(ChatMessage(role: "assistant", content: String(content.prefix(24_000))))
-                    messages.append(ChatMessage(role: "user", content: AIPromptBuilder.repairPrompt()))
+                    messages.append(ChatMessage(role: "assistant", text: String(content.prefix(24_000))))
+                    messages.append(ChatMessage(role: "user", text: AIPromptBuilder.repairPrompt()))
                     continue
                 }
                 throw lastParseError
@@ -97,7 +118,7 @@ actor DeepSeekService: AIService {
 
     // MARK: - Chat request
 
-    private func requestCompletion(messages: [ChatMessage]) async throws -> String {
+    private func requestCompletion(messages: [ChatMessage], modelID: String) async throws -> String {
         let body = ChatRequest(
             model: modelID,
             messages: messages,
@@ -288,9 +309,63 @@ actor DeepSeekService: AIService {
 
 // MARK: - Wire types
 
-private struct ChatMessage: Codable, Sendable {
+private struct ChatMessage: Encodable, Sendable {
+    enum MessageContent: Encodable, Sendable {
+        case text(String)
+        case parts([ChatContentPart])
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .text(let text):
+                try container.encode(text)
+            case .parts(let parts):
+                try container.encode(parts)
+            }
+        }
+    }
+
     let role: String
-    let content: String
+    let content: MessageContent
+
+    init(role: String, text: String) {
+        self.role = role
+        self.content = .text(text)
+    }
+
+    init(role: String, parts: [ChatContentPart]) {
+        self.role = role
+        self.content = .parts(parts)
+    }
+}
+
+private struct ChatContentPart: Encodable, Sendable {
+    struct ImageURL: Encodable, Sendable {
+        let url: String
+        let detail: String?
+    }
+
+    let type: String
+    let text: String?
+    let imageURL: ImageURL?
+
+    enum CodingKeys: String, CodingKey {
+        case type, text
+        case imageURL = "image_url"
+    }
+
+    static func text(_ value: String) -> ChatContentPart {
+        ChatContentPart(type: "text", text: value, imageURL: nil)
+    }
+
+    static func image(jpegData: Data, detail: String) -> ChatContentPart {
+        let encoded = jpegData.base64EncodedString()
+        return ChatContentPart(
+            type: "image_url",
+            text: nil,
+            imageURL: ImageURL(url: "data:image/jpeg;base64,\(encoded)", detail: detail)
+        )
+    }
 }
 
 private struct ChatRequest: Encodable {

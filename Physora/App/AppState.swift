@@ -3,9 +3,7 @@ import SwiftUI
 
 enum AppTab: String, Hashable, CaseIterable, Identifiable {
     case home
-    case history
     case reference
-    case tools
     case settings
 
     var id: String { rawValue }
@@ -13,9 +11,7 @@ enum AppTab: String, Hashable, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .home: "Главная"
-        case .history: "История"
         case .reference: "Справочник"
-        case .tools: "Инструменты"
         case .settings: "Настройки"
         }
     }
@@ -23,11 +19,44 @@ enum AppTab: String, Hashable, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .home: "house.fill"
-        case .history: "clock.arrow.circlepath"
         case .reference: "book.closed.fill"
-        case .tools: "function"
         case .settings: "gearshape.fill"
         }
+    }
+}
+
+enum InterfaceSize: String, CaseIterable, Identifiable, Sendable {
+    case compact
+    case standard
+    case large
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .compact: "Мельче"
+        case .standard: "Обычный"
+        case .large: "Крупнее"
+        }
+    }
+
+    var offset: Int {
+        switch self {
+        case .compact: -1
+        case .standard: 0
+        case .large: 1
+        }
+    }
+
+    func adjusted(_ size: DynamicTypeSize) -> DynamicTypeSize {
+        let sizes: [DynamicTypeSize] = [
+            .xSmall, .small, .medium, .large, .xLarge, .xxLarge, .xxxLarge,
+            .accessibility1, .accessibility2, .accessibility3,
+            .accessibility4, .accessibility5
+        ]
+        guard let current = sizes.firstIndex(of: size) else { return size }
+        let target = min(max(current + offset, 0), sizes.count - 1)
+        return sizes[target]
     }
 }
 
@@ -84,11 +113,15 @@ enum HistoryFilter: String, CaseIterable, Identifiable {
 final class AppState {
     enum DefaultsKey {
         static let theme = "physora.theme"
+        static let interfaceSize = "physora.interfaceSize"
         static let modelID = "physora.modelID"
         static let explanationDetail = "physora.explanationDetail"
         static let autoSI = "physora.autoSI"
         static let buildDiagrams = "physora.buildDiagrams"
         static let extraExplanations = "physora.extraExplanations"
+        static let showAnalysis = "physora.showAnalysis"
+        static let separateFormulas = "physora.separateFormulas"
+        static let separateCalculations = "physora.separateCalculations"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -102,6 +135,10 @@ final class AppState {
 
     var theme: AppTheme {
         didSet { defaults.set(theme.rawValue, forKey: DefaultsKey.theme) }
+    }
+
+    var interfaceSize: InterfaceSize {
+        didSet { defaults.set(interfaceSize.rawValue, forKey: DefaultsKey.interfaceSize) }
     }
 
     var modelID: String {
@@ -124,20 +161,38 @@ final class AppState {
         didSet { defaults.set(showExtraExplanations, forKey: DefaultsKey.extraExplanations) }
     }
 
+    var showAnalysis: Bool {
+        didSet { defaults.set(showAnalysis, forKey: DefaultsKey.showAnalysis) }
+    }
+
+    var showSeparateFormulas: Bool {
+        didSet { defaults.set(showSeparateFormulas, forKey: DefaultsKey.separateFormulas) }
+    }
+
+    var showSeparateCalculations: Bool {
+        didSet { defaults.set(showSeparateCalculations, forKey: DefaultsKey.separateCalculations) }
+    }
+
     init(defaults: UserDefaults = .standard, persistenceMessage: String? = nil) {
         self.defaults = defaults
         self.persistenceMessage = persistenceMessage
         self.theme = AppTheme(rawValue: defaults.string(forKey: DefaultsKey.theme) ?? "") ?? .system
+        self.interfaceSize = InterfaceSize(
+            rawValue: defaults.string(forKey: DefaultsKey.interfaceSize) ?? ""
+        ) ?? .standard
         let savedModel = defaults.string(forKey: DefaultsKey.modelID) ?? AIModelInfo.deepSeekOptions[0].id
         self.modelID = AIModelInfo.deepSeekOptions.contains(where: { $0.id == savedModel })
             ? savedModel
             : AIModelInfo.deepSeekOptions[0].id
         self.explanationDetail = ExplanationDetail(
             rawValue: defaults.string(forKey: DefaultsKey.explanationDetail) ?? ""
-        ) ?? .standard
+        ) ?? .concise
         self.autoSI = defaults.object(forKey: DefaultsKey.autoSI) as? Bool ?? true
         self.buildDiagrams = defaults.object(forKey: DefaultsKey.buildDiagrams) as? Bool ?? true
-        self.showExtraExplanations = defaults.object(forKey: DefaultsKey.extraExplanations) as? Bool ?? true
+        self.showExtraExplanations = defaults.object(forKey: DefaultsKey.extraExplanations) as? Bool ?? false
+        self.showAnalysis = defaults.object(forKey: DefaultsKey.showAnalysis) as? Bool ?? false
+        self.showSeparateFormulas = defaults.object(forKey: DefaultsKey.separateFormulas) as? Bool ?? false
+        self.showSeparateCalculations = defaults.object(forKey: DefaultsKey.separateCalculations) as? Bool ?? false
         self.hasStoredAPIKey = KeychainManager.hasAPIKey()
     }
 
@@ -146,22 +201,15 @@ final class AppState {
             explanationDetail: explanationDetail,
             autoSI: autoSI,
             buildDiagrams: buildDiagrams,
-            showExtraExplanations: showExtraExplanations
+            showExtraExplanations: showExtraExplanations,
+            showAnalysis: showAnalysis,
+            showSeparateFormulas: showSeparateFormulas,
+            showSeparateCalculations: showSeparateCalculations
         )
     }
 
     var modelTitle: String {
         AIModelInfo.title(for: modelID)
-    }
-
-    func showHistory() {
-        historyFilter = .all
-        selectedTab = .history
-    }
-
-    func showFavorites() {
-        historyFilter = .favorites
-        selectedTab = .history
     }
 
     func showSettings() {

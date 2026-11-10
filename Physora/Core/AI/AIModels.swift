@@ -9,6 +9,7 @@ struct PhysicsSolution: Codable, Hashable, Sendable {
     var schemaVersion: Int = 1
     var topic: String = ""
     var isPhysicsProblem: Bool = true
+    var problemStatement: String = ""
     var problemAnalysis: String = ""
     var given: [GivenQuantity] = []
     var find: [FindQuantity] = []
@@ -25,7 +26,7 @@ struct PhysicsSolution: Codable, Hashable, Sendable {
     var needsDiagram: Bool = false
 
     enum CodingKeys: String, CodingKey {
-        case schemaVersion, topic, isPhysicsProblem, problemAnalysis
+        case schemaVersion, topic, isPhysicsProblem, problemStatement, problemAnalysis
         case given, find, siNote, siConversions, formulas, solutionSteps
         case calculations, diagrams, graphs, finalAnswer, explanation
         case warnings, needsDiagram
@@ -38,6 +39,7 @@ struct PhysicsSolution: Codable, Hashable, Sendable {
         schemaVersion = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
         topic = c.flexibleString(forKey: .topic)
         isPhysicsProblem = try c.decodeIfPresent(Bool.self, forKey: .isPhysicsProblem) ?? true
+        problemStatement = c.flexibleString(forKey: .problemStatement)
         problemAnalysis = c.flexibleString(forKey: .problemAnalysis)
         given = c.lossyArray(forKey: .given)
         find = c.lossyArray(forKey: .find)
@@ -59,6 +61,7 @@ struct PhysicsSolution: Codable, Hashable, Sendable {
         try c.encode(schemaVersion, forKey: .schemaVersion)
         try c.encode(topic, forKey: .topic)
         try c.encode(isPhysicsProblem, forKey: .isPhysicsProblem)
+        try c.encode(problemStatement, forKey: .problemStatement)
         try c.encode(problemAnalysis, forKey: .problemAnalysis)
         try c.encode(given, forKey: .given)
         try c.encode(find, forKey: .find)
@@ -76,7 +79,8 @@ struct PhysicsSolution: Codable, Hashable, Sendable {
     }
 
     var hasVisibleContent: Bool {
-        !problemAnalysis.isEmpty
+        !problemStatement.isEmpty
+            || !problemAnalysis.isEmpty
             || !given.isEmpty
             || !find.isEmpty
             || !formulas.isEmpty
@@ -283,12 +287,18 @@ struct SolutionPreferences: Sendable, Equatable {
     var autoSI: Bool
     var buildDiagrams: Bool
     var showExtraExplanations: Bool
+    var showAnalysis: Bool
+    var showSeparateFormulas: Bool
+    var showSeparateCalculations: Bool
 
     static let standard = SolutionPreferences(
-        explanationDetail: .standard,
+        explanationDetail: .concise,
         autoSI: true,
         buildDiagrams: true,
-        showExtraExplanations: true
+        showExtraExplanations: false,
+        showAnalysis: false,
+        showSeparateFormulas: false,
+        showSeparateCalculations: false
     )
 
     var russianDetail: String {

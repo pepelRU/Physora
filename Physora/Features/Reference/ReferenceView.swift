@@ -2,15 +2,7 @@ import SwiftUI
 
 extension PhysicsCategory {
     var tint: Color {
-        switch self {
-        case .mechanics: .physoraAccent
-        case .molecular: .physoraMint
-        case .thermodynamics: .physoraAmber
-        case .electrodynamics: Color(red: 0.62, green: 0.48, blue: 0.98)
-        case .optics: Color(red: 0.25, green: 0.80, blue: 0.88)
-        case .oscillations: Color(red: 0.96, green: 0.48, blue: 0.60)
-        case .quantum: Color(red: 0.52, green: 0.68, blue: 1.0)
-        }
+        .primary
     }
 }
 
@@ -374,19 +366,12 @@ struct FormulaDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .background(
-            LinearGradient(
-                colors: [
-                    formula.category.tint.opacity(0.14),
-                    formula.category.tint.opacity(0.045)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
+            Color.physoraSurface,
             in: RoundedRectangle(cornerRadius: 26, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(formula.category.tint.opacity(0.20), lineWidth: 1)
+                .strokeBorder(Color.physoraStroke, lineWidth: 1)
         )
     }
 }

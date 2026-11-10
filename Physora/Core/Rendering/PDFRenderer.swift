@@ -115,12 +115,16 @@ private final class SolutionPDFWriter {
     private let media: PDFMedia
 
     private let margin: CGFloat = 44
-    private let accent = UIColor(red: 56 / 255, green: 169 / 255, blue: 255 / 255, alpha: 1)
-    private let ink = UIColor(red: 0.075, green: 0.125, blue: 0.185, alpha: 1)
-    private let muted = UIColor(red: 0.37, green: 0.43, blue: 0.51, alpha: 1)
-    private let hairline = UIColor(red: 0.84, green: 0.88, blue: 0.92, alpha: 1)
-    private let paperTint = UIColor(red: 0.955, green: 0.974, blue: 0.992, alpha: 1)
-    private let amber = UIColor(red: 0.72, green: 0.44, blue: 0.06, alpha: 1)
+    private let accent = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+    }
+    private let ink = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor.white : UIColor(red: 0.06, green: 0.06, blue: 0.07, alpha: 1)
+    }
+    private let muted = UIColor(red: 0.38, green: 0.38, blue: 0.40, alpha: 1)
+    private let hairline = UIColor(red: 0.85, green: 0.85, blue: 0.86, alpha: 1)
+    private let paperTint = UIColor(red: 0.96, green: 0.96, blue: 0.965, alpha: 1)
+    private let amber = UIColor(red: 0.22, green: 0.22, blue: 0.24, alpha: 1)
 
     private var y: CGFloat = 44
     private var pageNumber = 0
@@ -503,7 +507,7 @@ private final class SolutionPDFWriter {
                 drawIndentedText(MathParser.plainText(step.calculation), font: UIFont.systemFont(ofSize: 10.8), color: ink, indent: 25)
             }
             if !step.result.isEmpty {
-                let resultColor = UIColor(red: 0.08, green: 0.44, blue: 0.70, alpha: 1)
+                let resultColor = UIColor(red: 0.10, green: 0.10, blue: 0.11, alpha: 1)
                 drawIndentedText(MathParser.plainText(step.result), font: UIFont.systemFont(ofSize: 11.5, weight: .semibold), color: resultColor, indent: 25)
             }
             y = max(y, stepTop + 34)
@@ -587,7 +591,7 @@ private final class SolutionPDFWriter {
         let font = UIFont(name: "Georgia", size: 15) ?? UIFont.systemFont(ofSize: 15, weight: .medium)
         let answerAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: UIColor(red: 0.03, green: 0.31, blue: 0.50, alpha: 1)
+            .foregroundColor: UIColor(red: 0.06, green: 0.06, blue: 0.07, alpha: 1)
         ]
         let bounds = (answerText as NSString).boundingRect(
             with: CGSize(width: contentWidth - 34, height: 320),
@@ -598,9 +602,9 @@ private final class SolutionPDFWriter {
         let cardHeight = ceil(bounds.height) + 32
         newPageIfNeeded(cardHeight + 10)
         let card = CGRect(x: margin, y: y, width: contentWidth, height: cardHeight)
-        UIColor(red: 0.91, green: 0.96, blue: 1, alpha: 1).setFill()
+        UIColor(red: 0.965, green: 0.965, blue: 0.968, alpha: 1).setFill()
         UIBezierPath(roundedRect: card, cornerRadius: 12).fill()
-        accent.withAlphaComponent(0.45).setStroke()
+        UIColor.black.withAlphaComponent(0.3).setStroke()
         let border = UIBezierPath(roundedRect: card, cornerRadius: 12)
         border.lineWidth = 0.8
         border.stroke()
@@ -640,7 +644,7 @@ private final class SolutionPDFWriter {
             )
             let height = ceil(bounds.height) + 14
             let rect = CGRect(x: margin, y: y, width: contentWidth, height: height)
-            UIColor(red: 1, green: 0.971, blue: 0.912, alpha: 1).setFill()
+            UIColor(red: 0.95, green: 0.95, blue: 0.955, alpha: 1).setFill()
             UIBezierPath(roundedRect: rect, cornerRadius: 8).fill()
             (warning as NSString).draw(
                 in: CGRect(x: rect.minX + 13, y: rect.minY + 7, width: rect.width - 26, height: bounds.height + 2),
@@ -822,7 +826,7 @@ private final class SolutionPDFWriter {
     }
 
     private func drawMediaCard(rect: CGRect, image: UIImage) {
-        UIColor(red: 0.979, green: 0.987, blue: 0.995, alpha: 1).setFill()
+        UIColor(red: 0.98, green: 0.98, blue: 0.985, alpha: 1).setFill()
         UIBezierPath(roundedRect: rect, cornerRadius: 12).fill()
         hairline.setStroke()
         let border = UIBezierPath(roundedRect: rect, cornerRadius: 12)

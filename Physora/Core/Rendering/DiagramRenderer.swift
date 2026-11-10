@@ -6,29 +6,17 @@ import SwiftUI
 enum RenderPalette {
     static func color(named name: String?, scheme: ColorScheme) -> Color {
         let key = (name ?? "primary").lowercased()
-        let primary = scheme == .dark ? Color.white : Color(red: 0.08, green: 0.15, blue: 0.23)
-        let secondary = scheme == .dark ? Color.white.opacity(0.58) : Color(red: 0.35, green: 0.42, blue: 0.50)
+        let primary = scheme == .dark ? Color.white : Color.black
+        let secondary = primary.opacity(0.55)
         switch key {
-        case "accent", "blue":
-            return .physoraAccent
-        case "cyan":
-            return Color(red: 0.24, green: 0.82, blue: 0.90)
-        case "green", "mint":
-            return .physoraMint
-        case "orange", "amber":
-            return .physoraAmber
-        case "red", "rose":
-            return scheme == .dark ? Color(red: 1.0, green: 0.42, blue: 0.42) : Color(red: 0.82, green: 0.18, blue: 0.22)
-        case "purple":
-            return Color(red: 0.66, green: 0.50, blue: 0.98)
-        case "yellow":
-            return Color(red: 0.97, green: 0.80, blue: 0.24)
-        case "gray", "grey", "muted":
-            return secondary.opacity(0.72)
-        case "secondary":
+        case "primary", "accent", "red", "orange", "amber":
+            return primary
+        case "secondary", "gray", "grey", "muted":
             return secondary
+        case "cyan", "green", "mint", "blue", "purple", "yellow":
+            return primary.opacity(0.70)
         case "white":
-            return .white
+            return primary
         default:
             return primary
         }

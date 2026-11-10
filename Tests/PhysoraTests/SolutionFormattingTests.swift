@@ -74,4 +74,26 @@ final class SolutionFormattingTests: XCTestCase {
         XCTAssertTrue(user.contains("BEGIN_PROBLEM"))
         XCTAssertTrue(user.contains("END_PROBLEM"))
     }
+
+    func testPhotoPromptAsksToRecognizeTheTask() {
+        let prompt = AIPromptBuilder.userPrompt(
+            problem: "",
+            preferences: .standard,
+            imageCount: 2
+        )
+        XCTAssertTrue(prompt.contains("фотографий: 2"))
+        XCTAssertTrue(prompt.contains("распознай условие"))
+        XCTAssertTrue(prompt.contains("problemStatement"))
+    }
+
+    func testDefaultPreferencesHideAnalysisAndExplanations() {
+        let preferences = SolutionPreferences.standard
+        XCTAssertFalse(preferences.showAnalysis)
+        XCTAssertFalse(preferences.showExtraExplanations)
+        XCTAssertFalse(preferences.showSeparateFormulas)
+        XCTAssertFalse(preferences.showSeparateCalculations)
+        let prompt = AIPromptBuilder.systemPrompt(preferences: preferences)
+        XCTAssertTrue(prompt.contains("Поле problemAnalysis должно быть пустой строкой"))
+        XCTAssertTrue(prompt.contains("Поля explanation"))
+    }
 }
