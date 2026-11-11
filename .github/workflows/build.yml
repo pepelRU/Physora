@@ -129,6 +129,13 @@ jobs:
           capture chats-dark -physoraScreenshots -physoraTab home -physoraScreen history
           capture tools-dark -physoraScreenshots -physoraTab home -physoraScreen tools
 
+      - name: Copy screenshots to Docs/Screenshots
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p Docs/Screenshots
+          cp artifacts/*.png Docs/Screenshots/
+
       - name: Build unsigned app for iPhone
         shell: bash
         run: |
