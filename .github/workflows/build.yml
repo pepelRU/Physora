@@ -135,6 +135,15 @@ jobs:
         run: |
           mkdir -p Docs/Screenshots
           cp artifacts/*.png Docs/Screenshots/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Docs/Screenshots/
+          if git diff --cached --quiet; then
+            echo "No screenshot changes to commit"
+          else
+            git commit -m "CI: update simulator screenshots"
+            git push
+          fi
 
       - name: Build unsigned app for iPhone
         shell: bash
