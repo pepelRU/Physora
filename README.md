@@ -22,7 +22,27 @@
 
 Главный экран — чат. В шапке слева расположены кнопки истории и инструментов, в центре — знак Physora. Пользователь отправляет текст и до четырёх фотографий, а ответ приходит в виде компактного тетрадного листа. Снизу — только три вкладки: **Главная**, **Справочник**, **Настройки**.
 
-Скриншоты светлой и тёмной темы публикуются в артефактах CI-запуска **Build & Test** и обновляются при каждой сборке.
+Все скриншоты автоматически делаются в CI и доступны в артефактах запуска **Build & Test**.
+
+### Светлая тема
+
+| Главный | Решение | Настройки |
+|:---:|:---:|:---:|
+| ![Home Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/home-light.png) | ![Solution Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/solution-light.png) | ![Settings Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/settings-light.png) |
+
+| История чатов | Инструменты | Справочник |
+|:---:|:---:|:---:|
+| ![Chats Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/chats-light.png) | ![Tools Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/tools-light.png) | ![Reference Light](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/reference-light.png) |
+
+### Тёмная тема
+
+| Главный | Решение | Настройки |
+|:---:|:---:|:---:|
+| ![Home Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/home-dark.png) | ![Solution Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/solution-dark.png) | ![Settings Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/settings-dark.png) |
+
+| История чатов | Инструменты | Справочник |
+|:---:|:---:|:---:|
+| ![Chats Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/chats-dark.png) | ![Tools Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/tools-dark.png) | ![Reference Dark](https://github.com/pepelRU/Physora/raw/refs/heads/main/Docs/Screenshots/reference-dark.png) |
 
 ---
 
